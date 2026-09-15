@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: setup
 description: One-time interview that configures the daily-brief plugin — section order, sort defaults, empty-state behavior, annotation placeholder hints, optional auto-run schedule. Auto-fires on "/setup-brief", "configure daily-brief", "set up the brief", "configure my brief", or when the user runs `/brief` and no config file exists. Writes results to `<config-root>/plugins/daily-brief.user-context.md`. Re-run anytime to update.
 ---

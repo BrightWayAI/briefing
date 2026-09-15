@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: setup-brief
 description: "Configure the daily-brief plugin — section order, what to show when sources are empty, default sort, annotation placeholder text. Writes results to `<config-root>/plugins/daily-brief.user-context.md` (where `<config-root>` is the folder you chose during first-time setup, stored at `~/Documents/.claude-plugin-config-root`). Re-run anytime to update."
 ---
