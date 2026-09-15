@@ -4,6 +4,11 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.8.0] — pipeline-analyst ownership moved to growth (2026-09-15)
+
+### Changed
+- `pipeline-analyst` / `pipeline-forecast` now live in the `growth` plugin (moved from `ops`). `/plan-tomorrow` and `/setup-plan` updated to delegate to `growth:pipeline-analyst` and report "Growth Engine not installed; pipeline analysis skipped" when growth isn't present.
+
 ## [0.7.0] — renamed to briefing (2026-09-15)
 
 ### Changed
