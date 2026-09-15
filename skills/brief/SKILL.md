@@ -1,6 +1,6 @@
 ---
 name: brief
-description: Generate or refresh today's daily brief as the persistent Cowork artifact "Today's Brief" (stable id `todays-brief`). Auto-fires on "/brief", "morning brief", "today's brief", "what's on today", "what am I working on today", "give me my brief", or any phrase asking for today's working surface. Renders 5 fixed sections — Center of Gravity, Calendar Block (visual timeline + written list), Priority Tasks (richer actions), Outreach Queue (actions + category tags), Yesterday's Reflection. Filters everything against `memory/me/surfacing-prefs.md`. Read-only across sources — no drafting, no sends.
+description: Generate or refresh today's daily brief as the persistent Cowork artifact "Today's Brief" (stable id `todays-brief`). Auto-fires on "/brief", "morning brief", "today's brief", "what's on today", "what am I working on today", "give me my brief", or any phrase asking for today's working surface. Renders 5 fixed sections — Center of Gravity, Calendar Block (visual timeline + written list), Priority Tasks (richer actions), Outreach Queue (actions + category tags), Yesterday's Reflection. Filters everything against `memory/me/surfacing-prefs.md`. Read-only across sources — no drafting, no sends. `/brief --tomorrow` (or "plan tomorrow"/"block my day" phrasing) dispatches to calendar-first next-day planning instead — see `commands/brief.md` Step -1.
 ---
 
 <!-- OPENAI-ADAPTER:START -->

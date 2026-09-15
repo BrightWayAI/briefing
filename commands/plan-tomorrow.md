@@ -1,10 +1,10 @@
 ---
-description: Plan your next business day end-to-end. Pulls CRM tasks, working memory context, and inbox action items, then creates time blocks on your calendar with full context baked into each block. The calendar IS the plan — no separate document.
+description: Plan your next business day end-to-end. Pulls CRM tasks, working memory context, and inbox action items, then creates time blocks on your calendar with full context baked into each block. The calendar IS the plan — no separate document. Reached via `/brief --tomorrow` (2026-09-15) as the single documented entry point; this file remains the canonical procedure.
 ---
 
 # /plan-tomorrow
 
-Calendar-first daily planning.
+Calendar-first daily planning. Invoked via `/brief --tomorrow` (see `commands/brief.md` Step -1) or directly as `/plan-tomorrow` — both reach this same procedure.
 
 The output of this command is **calendar events with full context baked in**. You should be able to open your calendar tomorrow morning and just start working — every block tells you what to do, why it matters, and what "done" looks like.
 
@@ -62,7 +62,7 @@ The agent returns a ranked list. Use the top items as candidate task blocks.
 **If pipeline-analyst is not available** (or this plugin's user-context says CRM is "none"): query the CRM directly for tasks owned by you (per `crm-owner-id` in user-context), status NOT_STARTED or IN_PROGRESS, due on/before the target day. Sort by priority then due date.
 
 ### 2C — Pull project context from working memory
-**If `claude-cortex` is installed:** Memory lives at `~/Documents/Claude/memory/`. Read `DASHBOARD.md` for the master index, then read individual node files for active projects. Extract: P0/P1 actions, open threads, deadlines, blockers.
+**If `claude-cortex` is installed:** memory lives at `<config-root>/memory/` (resolve `<config-root>` per cortex's `references/core-contract.md` §1 — never hardcode a path). Read `DASHBOARD.md` for the master index, then read individual node files for active projects. Extract: P0/P1 actions, open threads, deadlines, blockers.
 
 **If cortex is not installed:** skip this step. Note in the final output that memory wasn't available.
 

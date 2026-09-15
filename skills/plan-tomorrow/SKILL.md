@@ -1,6 +1,6 @@
 ---
 name: plan-tomorrow
-description: Calendar-first daily planning. Auto-fires on "/plan-tomorrow", "plan my day", "plan my tomorrow", "block my day", "set up my day", "what should I do tomorrow", "prep tomorrow", "schedule my tasks", "plan my Monday/Tuesday/etc.", "what's tomorrow look like", "help me figure out tomorrow", "organize my day", or any variation involving planning and time-blocking the upcoming workday. Pulls from CRM, working memory, and inbox; creates calendar events with rich context.
+description: Calendar-first daily planning. Auto-fires on "/plan-tomorrow", "/brief --tomorrow", "plan my day", "plan my tomorrow", "block my day", "set up my day", "what should I do tomorrow", "prep tomorrow", "schedule my tasks", "plan my Monday/Tuesday/etc.", "what's tomorrow look like", "help me figure out tomorrow", "organize my day", or any variation involving planning and time-blocking the upcoming workday. Pulls from CRM, working memory, and inbox; creates calendar events with rich context. `/plan-tomorrow` remains a direct alias.
 ---
 
 <!-- OPENAI-ADAPTER:START -->

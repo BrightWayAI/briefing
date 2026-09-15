@@ -1,5 +1,5 @@
 ---
-description: Generate or refresh today's daily brief as the persistent Cowork artifact "Today's Brief" (stable id `todays-brief`). Renders 5 fixed sections — Center of Gravity, Calendar Block (visual timeline + written list), Priority Tasks (richer actions), Outreach Queue (actions + category tags), Yesterday's Reflection. Filters everything against `memory/me/surfacing-prefs.md` before render. Writes a markdown twin to `<config-root>/briefs/YYYY-MM-DD.md`. Run again any time to refresh; state persists in localStorage `brief-YYYY-MM-DD`.
+description: Generate or refresh today's daily brief as the persistent Cowork artifact "Today's Brief" (stable id `todays-brief`). Renders 5 fixed sections — Center of Gravity, Calendar Block (visual timeline + written list), Priority Tasks (richer actions), Outreach Queue (actions + category tags), Yesterday's Reflection. Filters everything against `memory/me/surfacing-prefs.md` before render. Writes a markdown twin to `<config-root>/briefs/YYYY-MM-DD.md`. Run again any time to refresh; state persists in localStorage `brief-YYYY-MM-DD`. `/brief --tomorrow [date?]` dispatches to calendar-first next-day planning (see Step -1) — same job the retired standalone `/plan-tomorrow` command did.
 ---
 
 # /brief
@@ -12,6 +12,14 @@ Builds today's working surface. The output is two coordinated things:
 This command is **read-only across all sources**. It does not draft replies, modify CRM tasks, or send anything. Acting on annotations happens in `/process-brief`; mining the actions happens in `/end-day`.
 
 **The brief is a working surface, not a read-only snapshot (v0.5.0).** Every interactive action writes to one localStorage blob keyed `brief-YYYY-MM-DD` and is mined by `/end-day` Step 2c.
+
+---
+
+## Step -1 — Mode dispatch
+
+If invoked as `/brief --tomorrow` (or the user's natural-language request is clearly "plan tomorrow" / "block my day" / "plan next business day" rather than "show me today"), this is a **different job**, not a variant render of the same artifact: it writes new calendar events instead of rendering a read-only status surface. Delegate the entire request to `commands/plan-tomorrow.md` and follow that command's workflow exactly (Step 0 onward) — do not attempt to reuse this command's artifact-rendering steps for it. `commands/plan-tomorrow.md` is the canonical procedure; this dispatch is a packaging change so `/brief --tomorrow` is the single documented entry point, folding in the formerly-standalone `/plan-tomorrow` command (2026-09-15).
+
+Otherwise (no `--tomorrow` flag, no next-day-planning phrasing), continue with today's brief below.
 
 ---
 

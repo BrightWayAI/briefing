@@ -4,6 +4,25 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.6.6] — /brief --tomorrow is the documented next-day entry point (2026-09-15)
+
+Nucleus Operating Model Refactor Phase 3 step 3.5.
+
+### Changed
+- `commands/brief.md` gains a Step -1 mode dispatch: `/brief --tomorrow` (or
+  clear next-day-planning phrasing) delegates the whole request to
+  `commands/plan-tomorrow.md`, which remains the canonical calendar-writing
+  procedure — today's artifact-rendering pipeline and tomorrow's
+  calendar-block-writing pipeline are different jobs with different
+  mechanisms (read-only render vs. new-event writes), so this is a routing
+  packaging change, not a merge of the two procedures into one.
+- `commands/plan-tomorrow.md` — fixed a pre-existing bug: Step 2C read memory
+  from the hardcoded `~/Documents/Claude/memory/` path, predating the
+  `<config-root>` convention. Now resolves per cortex's core-contract.
+- `skills/brief/SKILL.md`, `skills/plan-tomorrow/SKILL.md`, `README.md`
+  updated to describe `/brief --tomorrow` as the documented entry point with
+  `/plan-tomorrow` as a direct alias.
+
 ## [0.6.5] — writing-style renamed to voice (2026-09-15)
 
 ### Changed
