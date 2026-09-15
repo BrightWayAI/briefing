@@ -1,38 +1,39 @@
 ---
-description: Configure the daily-brief plugin — section order, what to show when sources are empty, default sort, annotation placeholder text. Writes results to `<config-root>/plugins/daily-brief.user-context.md` (where `<config-root>` is the folder you chose during first-time setup, stored at `~/Documents/.claude-plugin-config-root`). Re-run anytime to update.
+description: Configure the daily-brief plugin — section order, empty-source behavior, default sort, and annotation placeholder text. Writes results to `<config-root>/plugins/daily-brief.user-context.md` through the shared vendor-neutral resolver. Re-run anytime to update.
 ---
 
 # /setup-brief
 
 Short interview that configures your daily brief: sort defaults, empty-state behavior, the task annotation hint, and the default source set for `/end-day`'s review-and-cost card. (The 5-section layout itself is fixed as of v0.5.0.)
 
-This plugin assumes identity, voice, and core-ops / relationships / lead-engine setups are already done (or skipped). It doesn't re-ask those questions.
+This plugin assumes identity, voice, Core Ops, and Relationships setup are already done (or skipped). It doesn't re-ask those questions.
 
 ---
 
 ## Step 0 — Resolve plugin config root
 
-Per-plugin config in this marketplace lives under a user-chosen folder, recorded at `~/Documents/.claude-plugin-config-root` (a single-line text file in the user's home directory). Resolve it before doing anything else.
+Resolve `<config-root>` through explicit override → `CORTEX_CONFIG_ROOT` →
+`~/.cortex/config-root` → legacy pointer → default. A malformed
+higher-priority pointer is an error.
 
 ### A — Try the pointer
 
-Ensure access to `~/Documents`. In Cowork, call `request_cowork_directory(~/Documents)` once if not already granted. In Claude Code (or any environment with direct filesystem access), no mount is needed. Then read `~/Documents/.claude-plugin-config-root`.
-
-- **Pointer exists**: read line 1 → that's the config root path. Ensure access to `<config-root>`. If running in Cowork and the folder isn't already mounted in this session, call `request_cowork_directory(<config-root>)`. If running in Claude Code or another environment with direct filesystem access, no mount call is needed. Skip to section C.
-- **Pointer missing**: continue to section B.
+If an intentional root resolves, request access only to that root in Cowork and
+continue to section C. If no pointer or override exists, continue to section B.
 
 ### B — First-time bootstrap
 
 This is the user's first plugin setup of any kind. Prompt:
 
-> "First-time plugin setup. Where should I store your plugin config — identity, voice, and per-plugin settings? Pick a folder you control. Examples: `~/Documents/Claude/` (a common pick — and where cortex memory already writes if you have it installed) or `~/Documents/PluginConfig/` or any other path you prefer. The folder will hold one `identity.md`, one `voice.md`, and a `plugins/` subdirectory with one file per plugin you set up."
+> "First-time Nucleus setup. Where should the shared config root live? Pick a folder you control. It will contain private identity/voice files under `memory/me/`, shared memory, and per-plugin settings."
 
 Once the user provides the path:
 
 1. Ensure access to `<path>`. If running in Cowork and the folder isn't already mounted in this session, call `request_cowork_directory(<path>)`. If running in Claude Code or another environment with direct filesystem access, no mount call is needed — proceed to read or write the file.
 2. Create `<path>/plugins/` if it doesn't exist.
-3. Write the absolute path to `~/Documents/.claude-plugin-config-root`.
-4. Confirm: "Saved. All marketplace plugin configs will live under `<path>` from now on. You can change this later by editing `~/Documents/.claude-plugin-config-root` directly."
+3. Atomically write the absolute path to `~/.cortex/config-root`; replacing a
+   different target requires a second explicit confirmation.
+4. Confirm: "Saved. All Nucleus hosts and plugins will resolve `<path>` from the vendor-neutral Cortex pointer."
 
 ### C — Read shared identity (light touch)
 

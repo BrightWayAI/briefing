@@ -4,6 +4,12 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.6.10] — consolidation boundary hardening (2026-09-15)
+
+### Changed
+- Made Relationships the active outreach source and isolated the old weekly-outreach file behind an explicit migration-only compatibility branch.
+- Standardized setup and runtime entry points on the vendor-neutral config-root resolver.
+
 ## [0.6.9] — Codex adapter synchronization (2026-09-15)
 
 ### Fixed

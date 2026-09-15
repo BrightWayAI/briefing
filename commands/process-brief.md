@@ -14,10 +14,10 @@ Closes the loop on the brief. The user has already opened today's "Today's Brief
 
 ### A — Resolve `<config-root>`
 
-Ensure access to `~/Documents`. In Cowork, call `request_cowork_directory(~/Documents)` once if not already granted. In Claude Code (or any environment with direct filesystem access), no mount is needed. Then read `~/Documents/.claude-plugin-config-root`.
-
-- **Pointer exists**: read line 1 → that's `<config-root>`. Ensure access to `<config-root>`. If running in Cowork and the folder isn't already mounted in this session, call `request_cowork_directory(<config-root>)`. If running in Claude Code or another environment with direct filesystem access, no mount call is needed. Continue.
-- **Pointer missing**: stop with "No plugin config root found. Run `/setup-brief` (or any plugin's setup) first."
+Resolve explicit override → `CORTEX_CONFIG_ROOT` → `~/.cortex/config-root` →
+legacy pointer → default. Request access only to the resolved root in Cowork. A
+malformed higher-priority pointer is an error. If inaccessible, stop and direct
+the user to `/setup-brief`.
 
 Resolve `<today_local>` the same way `/brief` does (user time zone from `<config-root>/memory/me/identity.md`).
 

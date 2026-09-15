@@ -6,10 +6,10 @@ Daily-brief turns your existing connectors (calendar, Gmail, CRM, cortex memory)
 
 **Reads:**
 - **Calendar MCP** — today's events, attendees, locations.
-- **Gmail MCP** — recent threads, sender, subject, snippet (via direct fallback or, if installed, the `inbox-triage` plugin which classifies before passing the top 3-7).
+- **Gmail MCP** — recent threads, sender, subject, and snippet; read-only during brief generation.
 - **HubSpot MCP (or other CRM)** — tasks owned by you, due today / overdue.
 - **Plugin references** — `<config-root>/plugins/daily-brief.user-context.md` for section toggles, sort defaults, placeholder hints. Read-only.
-- **Other plugin configs** — `<config-root>/plugins/weekly-outreach.*` (if installed) for the outreach queue. Read-only.
+- **Relationships brief** — `<config-root>/relationships/today.json` for the current relationship-action queue. Read-only.
 - **Cortex memory** — `<config-root>/memory/DASHBOARD.md` and any `person/`, `client/`, `bizdev/` node files referenced by today's meetings or inbox. Read-only.
 - **Yesterday's brief snapshot** — `<config-root>/briefs/<yesterday>.md`. Read-only.
 - **Shared identity** — `<config-root>/memory/me/identity.md` for time zone and tool inventory. Read-only.

@@ -10,20 +10,22 @@ Short interview that captures the context plan-tomorrow needs to actually be use
 
 ## Step 0 — Resolve plugin config root
 
-Per-plugin config in this marketplace lives under a user-chosen folder, recorded at `~/Documents/.claude-plugin-config-root` (single-line text file in the user's home).
+Resolve `<config-root>` through explicit override → `CORTEX_CONFIG_ROOT` →
+`~/.cortex/config-root` → legacy pointer → default.
 
 ### A — Try the pointer
 
-Ensure access to `~/Documents`. In Cowork, call `request_cowork_directory(~/Documents)` once if not already granted. In Claude Code (or any environment with direct filesystem access), no mount is needed. Then read `~/Documents/.claude-plugin-config-root`.
-- **Exists**: read line 1 → that's the config root path. Ensure access to `<config-root>`. If running in Cowork and the folder isn't already mounted in this session, call `request_cowork_directory(<config-root>)`. If running in Claude Code or another environment with direct filesystem access, no mount call is needed. Skip to section C.
-- **Missing**: continue to section B.
+If an intentional root resolves, request access only to it in Cowork and continue
+to section C. If no pointer or override exists, continue to section B.
 
 ### B — First-time bootstrap
 
-Prompt: "First-time plugin setup. Where should I store your plugin config — identity, voice, and per-plugin settings? Pick a folder you control (e.g., `~/Documents/Claude/` or `~/Documents/PluginConfig/`). The folder will hold `identity.md`, `voice.md`, and a `plugins/` subdirectory."
+Prompt: "First-time Nucleus setup. Where should the shared config root live?"
 
 Then:
-1. Ensure access to `<path>`. If running in Cowork and the folder isn't already mounted in this session, call `request_cowork_directory(<path>)`. If running in Claude Code or another environment with direct filesystem access, no mount call is needed. Create `<path>/plugins/`. Write absolute path to `~/Documents/.claude-plugin-config-root`.
+1. Ensure access to `<path>`, create `<path>/plugins/`, and atomically write
+   the absolute path to `~/.cortex/config-root`. Replacing another target requires
+   a second explicit confirmation.
 
 ### C — Read shared identity
 

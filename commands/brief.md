@@ -27,10 +27,10 @@ Otherwise (no `--tomorrow` flag, no next-day-planning phrasing), continue with t
 
 ### A — Resolve `<config-root>`
 
-Ensure access to `~/Documents`. In Cowork, call `request_cowork_directory(~/Documents)` once if not already granted. In Claude Code (or any environment with direct filesystem access), no mount is needed. Then read `~/Documents/.claude-plugin-config-root`.
-
-- **Pointer exists**: read line 1 → that's `<config-root>`. Ensure access to `<config-root>` (in Cowork, `request_cowork_directory(<config-root>)` if not already mounted). Continue to section B.
-- **Pointer missing**: prompt the user to run `/setup-brief` (or any other plugin's setup command) first, then stop. The brief cannot run without a config root.
+Resolve explicit override → `CORTEX_CONFIG_ROOT` → `~/.cortex/config-root` →
+legacy pointer → default. Request access only to the resolved root in Cowork. A
+malformed higher-priority pointer is an error. If the resolved root is not
+accessible, prompt the user to run `/setup-brief` and stop.
 
 ### B — Load plugin config
 
@@ -100,7 +100,10 @@ For each surviving task capture: stable `task-<id>` id, title, due date, related
 
 ### Outreach Queue (section 4)
 
-Source from the relationships/lead-engine pipeline (look in `<config-root>/relationships/today.json` if present; else the relationships plugin's current queue; legacy `<config-root>/plugins/weekly-outreach.*` fallback only if relationships isn't installed).
+Source from Relationships (look in `<config-root>/relationships/today.json` if
+present, otherwise its current queue). Existing installs may read the legacy
+`<config-root>/plugins/weekly-outreach.*` fallback only during migration and must
+label it as legacy in the output. <!-- LEGACY_COMPAT -->
 
 - Tier each contact: **Today** (scheduled/flagged today), **This week** (`due_date <= today + 7d` or weekly-cadence overdue), **Backlog** (flagged, not date-scoped).
 - For each contact capture: stable `outreach-<id>` id, name, title/company, last touch, a one-line "why," and — if the pipeline entry carries one — the **signal type** (one of lead-engine's 7: Engagement / Job change / Funding / Hiring / Growth-expansion / Tech-stack change / Direct intent). The signal is stored on the row's `data-signal` so it auto-fills the tag without asking.
