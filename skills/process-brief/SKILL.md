@@ -3,6 +3,16 @@ name: process-brief
 description: Read the actions + annotations the user logged into today's "Today's Brief" artifact (v0.5.0 blob — tasks/annotations/outreach_actions), classify each, and route it — draft reply via Gmail, move CRM task due date, dismiss; stage task actions (done→COMPLETED, delegate→delegatee task, skip→defer) and outreach actions (sent/nudge→touch, booked→prep task, let_go→close). Auto-fires on "/process-brief", "process my brief", "act on my annotations", "follow up on my brief". Intra-day actor; durable memory write-backs + suppression learning happen in cortex /end-day Step 2c. Drafts only — never sends.
 ---
 
+<!-- OPENAI-ADAPTER:START -->
+## OpenAI host binding
+
+Before acting, read `../../references/openai-portability.md`. That file translates
+host-specific tools, agents, artifacts, scheduling, connectors, and config-root
+access for ChatGPT and Codex. It overrides concrete Claude/Cowork tool names only;
+the workflow, safety gates, and output contract in this skill remain canonical.
+<!-- OPENAI-ADAPTER:END -->
+
+
 See `commands/process-brief.md` for the full workflow.
 
 ## When this skill fires

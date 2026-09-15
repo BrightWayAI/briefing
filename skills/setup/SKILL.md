@@ -3,6 +3,16 @@ name: setup
 description: One-time interview that configures the daily-brief plugin — section order, sort defaults, empty-state behavior, annotation placeholder hints, optional auto-run schedule. Auto-fires on "/setup-brief", "configure daily-brief", "set up the brief", "configure my brief", or when the user runs `/brief` and no config file exists. Writes results to `<config-root>/plugins/daily-brief.user-context.md`. Re-run anytime to update.
 ---
 
+<!-- OPENAI-ADAPTER:START -->
+## OpenAI host binding
+
+Before acting, read `../../references/openai-portability.md`. That file translates
+host-specific tools, agents, artifacts, scheduling, connectors, and config-root
+access for ChatGPT and Codex. It overrides concrete Claude/Cowork tool names only;
+the workflow, safety gates, and output contract in this skill remain canonical.
+<!-- OPENAI-ADAPTER:END -->
+
+
 See `commands/setup-brief.md` for the full setup workflow.
 
 ## When this skill fires

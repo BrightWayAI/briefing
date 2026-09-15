@@ -3,6 +3,16 @@ name: plan-tomorrow
 description: Calendar-first daily planning. Auto-fires on "/plan-tomorrow", "plan my day", "plan my tomorrow", "block my day", "set up my day", "what should I do tomorrow", "prep tomorrow", "schedule my tasks", "plan my Monday/Tuesday/etc.", "what's tomorrow look like", "help me figure out tomorrow", "organize my day", or any variation involving planning and time-blocking the upcoming workday. Pulls from CRM, working memory, and inbox; creates calendar events with rich context.
 ---
 
+<!-- OPENAI-ADAPTER:START -->
+## OpenAI host binding
+
+Before acting, read `../../references/openai-portability.md`. That file translates
+host-specific tools, agents, artifacts, scheduling, connectors, and config-root
+access for ChatGPT and Codex. It overrides concrete Claude/Cowork tool names only;
+the workflow, safety gates, and output contract in this skill remain canonical.
+<!-- OPENAI-ADAPTER:END -->
+
+
 See `commands/plan-tomorrow.md` for the full workflow.
 
 ## When this skill fires

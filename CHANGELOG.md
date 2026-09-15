@@ -4,6 +4,13 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.6.2] — OpenAI host adapter (2026-09-14)
+
+### Added
+- Native Codex/ChatGPT plugin manifest, durable `AGENTS.md` entrypoint, and an explicit OpenAI capability/degradation contract.
+- GPT-discoverable skill aliases for canonical command workflows and read-only Codex role bindings where this plugin ships agents.
+- Shared config-root resolution compatible with Cortex and Claude; all GPT tests use repository fixtures or temporary directories only.
+
 ## [0.6.1] — Fix D2a state mirror: allowlisted MCP write tool + honest degraded mode (2026-07-07)
 
 Coordinated with cortex v4.13.2. Root-caused by inspecting the Cowork artifact sandbox bridge (`coworkArtifact.js` preload + main-process handlers): the 0.6.0 auto-mirror **never worked** — it failed silently at three independent layers, every day, so no `.state.json` was ever written and `/end-day` always fell back to asking.

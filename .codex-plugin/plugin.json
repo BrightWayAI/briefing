@@ -1,0 +1,36 @@
+{
+  "name": "daily-brief",
+  "version": "0.6.2",
+  "description": "Combine calendar, tasks, outreach, inbox, CRM, and Cortex context into a daily brief, then process user-approved annotations and plan tomorrow.",
+  "author": {
+    "name": "BrightWay AI",
+    "url": "https://brightwayai.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/BrightWayAI/daily-brief",
+  "repository": "https://github.com/BrightWayAI/daily-brief",
+  "keywords": [
+    "nucleus",
+    "chatgpt",
+    "codex"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Daily Brief",
+    "shortDescription": "Build and process a daily operating brief",
+    "longDescription": "Combine calendar, tasks, outreach, inbox, CRM, and Cortex context into a daily brief, then process user-approved annotations and plan tomorrow.",
+    "developerName": "BrightWay AI",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write",
+      "Interactive"
+    ],
+    "websiteURL": "https://github.com/BrightWayAI/daily-brief",
+    "defaultPrompt": [
+      "Build today's brief.",
+      "Process these brief annotations.",
+      "Plan my next business day."
+    ]
+  }
+}
