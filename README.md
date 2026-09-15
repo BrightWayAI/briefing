@@ -86,7 +86,7 @@ Every side-effect is reversible: Gmail drafts (not sends), CRM date updates (not
 
 All per-user config lives at `<config-root>/plugins/briefing.user-context.md`. The first-run `/setup-brief` interview generates this file. Re-run setup any time to change preferences.
 
-`<config-root>` is the user-chosen folder for marketplace plugin config, recorded at `~/Documents/.claude-plugin-config-root`. See the marketplace README for the convention.
+`<config-root>` is the user-chosen folder for marketplace plugin config, resolved via the shared precedence chain (explicit override → `CORTEX_CONFIG_ROOT` → `~/.cortex/config-root` primary pointer → `~/Documents/.claude-plugin-config-root` legacy fallback → default). See the marketplace README for the convention.
 
 ## Roadmap
 

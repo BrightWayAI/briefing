@@ -4,6 +4,11 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.10.1] — config-root precedence wording fix (2026-09-15)
+
+### Fixed
+- `README.md` config section previously implied `~/Documents/.claude-plugin-config-root` was the primary pointer file. Corrected to describe the actual precedence chain (explicit override → `CORTEX_CONFIG_ROOT` → `~/.cortex/config-root` primary → legacy fallback → default).
+
 ## [0.10.0] — absorbs `/review`, `/timeline` (cortex), `/dashboard` (ops) (2026-09-15)
 
 Part of the "Today's Brief is every what's-going-on surface at any cadence" consolidation.
