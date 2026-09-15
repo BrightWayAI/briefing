@@ -4,6 +4,11 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.6.9] — Codex adapter synchronization (2026-09-15)
+
+### Fixed
+- Synchronized the Codex manifest with the current brief and tomorrow-planning surface.
+
 ## [0.6.8] — claude plugin eval suite (2026-09-15)
 
 Nucleus Operating Model Refactor Phase 4 step 4.2.
