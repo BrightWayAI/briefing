@@ -4,6 +4,12 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.6.5] — writing-style renamed to voice (2026-09-15)
+
+### Changed
+- `commands/process-brief.md` — reference to the `writing-style` plugin's draft
+  skill updated to `voice` (Nucleus Operating Model Refactor Phase 3 step 3.4).
+
 ## [0.6.4] — surfacing-prefs.md path moved to memory/me/ (2026-09-15)
 
 ### Changed
