@@ -19,7 +19,7 @@ Ensure access to `~/Documents`. In Cowork, call `request_cowork_directory(~/Docu
 - **Pointer exists**: read line 1 → that's `<config-root>`. Ensure access to `<config-root>`. If running in Cowork and the folder isn't already mounted in this session, call `request_cowork_directory(<config-root>)`. If running in Claude Code or another environment with direct filesystem access, no mount call is needed. Continue.
 - **Pointer missing**: stop with "No plugin config root found. Run `/setup-brief` (or any plugin's setup) first."
 
-Resolve `<today_local>` the same way `/brief` does (user time zone from `<config-root>/identity.md`).
+Resolve `<today_local>` the same way `/brief` does (user time zone from `<config-root>/memory/me/identity.md`).
 
 ### B — Verify today's brief exists
 
@@ -94,7 +94,7 @@ For `clarify` items, batch them: ask the user one combined question listing each
 ### draft_reply (inbox item)
 
 1. Read the original thread via Gmail MCP using the `thread_id` from the item ID.
-2. Call the writing-style plugin's draft skill if installed (or inline draft using `<config-root>/voice.md`). Build a reply that captures the user's intent from `annotation_text`.
+2. Call the writing-style plugin's draft skill if installed (or inline draft using `<config-root>/memory/me/voice.md`). Build a reply that captures the user's intent from `annotation_text`.
 3. Save as a Gmail draft via `mcp__f77d3a90-04d4-4394-96b5-a5d4402dfe0a__create_draft` (or whichever Gmail tool the runtime exposes).
 4. Capture the draft URL / Gmail draft ID for the run summary + markdown twin.
 

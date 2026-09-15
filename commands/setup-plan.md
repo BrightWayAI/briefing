@@ -27,7 +27,7 @@ Then:
 
 ### C — Read shared identity
 
-Read `<config-root>/identity.md` (cortex's `/setup-identity` output).
+Read `<config-root>/memory/me/identity.md` (cortex's `/setup-identity` output).
 - **Populated** → pre-fill Section 1 (Identity) and the primary-tool questions in Section 3 (CRM, calendar). Skip those; just confirm what you read.
 - **Missing** → offer `/setup-identity` first or proceed inline.
 

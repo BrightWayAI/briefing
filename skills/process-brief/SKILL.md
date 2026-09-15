@@ -31,7 +31,7 @@ See `commands/process-brief.md` for the full workflow.
 
 - Cowork artifact "Today's Brief" — v0.5.0 localStorage blob `tasks`/`annotations`/`outreach_actions` (via `mcp__cowork__read_widget_context`)
 - `<config-root>/briefs/<today>.md` — the markdown twin to append action records to
-- `<config-root>/voice.md` — for drafting replies in the user's voice
+- `<config-root>/memory/me/voice.md` — for drafting replies in the user's voice
 - Gmail MCP, HubSpot MCP — for the side-effects (Gmail drafts, CRM task date/status updates, delegatee tasks)
 
 ## Outputs

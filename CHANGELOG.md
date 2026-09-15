@@ -4,6 +4,11 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.6.3] — Identity/voice moved to memory/me/ (2026-09-15)
+
+### Changed
+- Path references updated from `<config-root>/identity.md` / `<config-root>/voice.md` to `<config-root>/memory/me/identity.md` / `<config-root>/memory/me/voice.md`, per the Nucleus Operating Model Refactor Phase 2 scopes restructure (identity/voice are personal, not org-shared facts). No behavior change beyond the path.
+
 ## [0.6.2] — OpenAI host adapter (2026-09-14)
 
 ### Added

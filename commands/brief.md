@@ -35,7 +35,7 @@ If `brief_enabled` is `false`, stop with: "Daily brief is disabled. Re-enable in
 
 ### C — Load shared identity
 
-Read `<config-root>/identity.md` for time zone (defines "today") and tool inventory (decides which sections will have data).
+Read `<config-root>/memory/me/identity.md` for time zone (defines "today") and tool inventory (decides which sections will have data).
 
 ### D — Load surfacing preferences (v0.5.0 — REQUIRED filter)
 

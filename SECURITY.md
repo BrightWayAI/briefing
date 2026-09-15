@@ -12,7 +12,7 @@ Daily-brief turns your existing connectors (calendar, Gmail, CRM, cortex memory)
 - **Other plugin configs** — `<config-root>/plugins/weekly-outreach.*` (if installed) for the outreach queue. Read-only.
 - **Cortex memory** — `<config-root>/memory/DASHBOARD.md` and any `person/`, `client/`, `bizdev/` node files referenced by today's meetings or inbox. Read-only.
 - **Yesterday's brief snapshot** — `<config-root>/briefs/<yesterday>.md`. Read-only.
-- **Shared identity** — `<config-root>/identity.md` for time zone and tool inventory. Read-only.
+- **Shared identity** — `<config-root>/memory/me/identity.md` for time zone and tool inventory. Read-only.
 - **Cowork artifact state** — `mcp__cowork__read_widget_context` on the "Today's Brief" artifact, to retrieve annotation textarea values during `/process-brief` and during same-day `/brief` re-runs.
 
 **Writes:**

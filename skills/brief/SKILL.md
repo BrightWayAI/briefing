@@ -30,7 +30,7 @@ See `commands/brief.md` for the full generation workflow.
 
 ## Inputs
 
-- `<config-root>/identity.md` — time zone, tool inventory
+- `<config-root>/memory/me/identity.md` — time zone, tool inventory
 - `<config-root>/plugins/daily-brief.user-context.md` — section toggles, sort defaults, empty-state behavior, annotation placeholder hints
 - `<config-root>/memory/surfacing-prefs.md` — **required filter**: do-not-resurface list + noise rules applied to tasks/outreach before render
 - `<config-root>/memory/DASHBOARD.md` — active project context (cortex)

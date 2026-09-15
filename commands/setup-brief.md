@@ -36,7 +36,7 @@ Once the user provides the path:
 
 ### C — Read shared identity (light touch)
 
-Read `<config-root>/identity.md` if present. This setup doesn't need most of it — but the user's time zone matters for "today" calculations, and the configured calendar / email / CRM tools influence which sections this plugin actually has data for. If `identity.md` is missing, prompt the user to run cortex's `/setup-identity` first (preferred) or skip and accept defaults.
+Read `<config-root>/memory/me/identity.md` if present. This setup doesn't need most of it — but the user's time zone matters for "today" calculations, and the configured calendar / email / CRM tools influence which sections this plugin actually has data for. If `identity.md` is missing, prompt the user to run cortex's `/setup-identity` first (preferred) or skip and accept defaults.
 
 For the rest of this document, **`<config-root>`** refers to the resolved path. This plugin's config file lives at **`<config-root>/plugins/daily-brief.user-context.md`**, and the brief markdown snapshots live at **`<config-root>/briefs/YYYY-MM-DD.md`**.
 

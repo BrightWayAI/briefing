@@ -20,8 +20,8 @@ If a new OpenAI-host user chooses a persistent root, configure it through Cortex
 write `~/.cortex/config-root` only after confirmation. Never overwrite a pointer that
 targets a different root without a second explicit confirmation, and do not create or
 update the legacy Claude pointer from an OpenAI host.
-Identity and voice remain shared files at `<config-root>/identity.md` and
-`<config-root>/voice.md`. Plugin state belongs under `<config-root>`—normally
+Identity and voice remain shared files at `<config-root>/memory/me/identity.md` and
+`<config-root>/memory/me/voice.md`. Plugin state belongs under `<config-root>`—normally
 `<config-root>/plugins/`—never inside the installed plugin directory.
 
 ## Invocation
