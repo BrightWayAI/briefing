@@ -4,6 +4,11 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.6.4] — surfacing-prefs.md path moved to memory/me/ (2026-09-15)
+
+### Changed
+- `commands/brief.md`, `skills/brief/SKILL.md` — `memory/surfacing-prefs.md` reference updated to `memory/me/surfacing-prefs.md`, per the Nucleus Operating Model Refactor Phase 2 scopes restructure (surfacing preferences are personal, not org-shared). No behavior change beyond the path.
+
 ## [0.6.3] — Identity/voice moved to memory/me/ (2026-09-15)
 
 ### Changed

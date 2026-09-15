@@ -1,6 +1,6 @@
 ---
 name: brief
-description: Generate or refresh today's daily brief as the persistent Cowork artifact "Today's Brief" (stable id `todays-brief`). Auto-fires on "/brief", "morning brief", "today's brief", "what's on today", "what am I working on today", "give me my brief", or any phrase asking for today's working surface. Renders 5 fixed sections — Center of Gravity, Calendar Block (visual timeline + written list), Priority Tasks (richer actions), Outreach Queue (actions + category tags), Yesterday's Reflection. Filters everything against `memory/surfacing-prefs.md`. Read-only across sources — no drafting, no sends.
+description: Generate or refresh today's daily brief as the persistent Cowork artifact "Today's Brief" (stable id `todays-brief`). Auto-fires on "/brief", "morning brief", "today's brief", "what's on today", "what am I working on today", "give me my brief", or any phrase asking for today's working surface. Renders 5 fixed sections — Center of Gravity, Calendar Block (visual timeline + written list), Priority Tasks (richer actions), Outreach Queue (actions + category tags), Yesterday's Reflection. Filters everything against `memory/me/surfacing-prefs.md`. Read-only across sources — no drafting, no sends.
 ---
 
 <!-- OPENAI-ADAPTER:START -->
@@ -32,7 +32,7 @@ See `commands/brief.md` for the full generation workflow.
 
 - `<config-root>/memory/me/identity.md` — time zone, tool inventory
 - `<config-root>/plugins/daily-brief.user-context.md` — section toggles, sort defaults, empty-state behavior, annotation placeholder hints
-- `<config-root>/memory/surfacing-prefs.md` — **required filter**: do-not-resurface list + noise rules applied to tasks/outreach before render
+- `<config-root>/memory/me/surfacing-prefs.md` — **required filter**: do-not-resurface list + noise rules applied to tasks/outreach before render
 - `<config-root>/memory/DASHBOARD.md` — active project context (cortex)
 - Calendar MCP — today's events (timeline strip + written list with per-meeting context)
 - HubSpot MCP — priority tasks (owner=you, due today / overdue; P0/P1 only)

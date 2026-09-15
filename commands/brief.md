@@ -1,5 +1,5 @@
 ---
-description: Generate or refresh today's daily brief as the persistent Cowork artifact "Today's Brief" (stable id `todays-brief`). Renders 5 fixed sections — Center of Gravity, Calendar Block (visual timeline + written list), Priority Tasks (richer actions), Outreach Queue (actions + category tags), Yesterday's Reflection. Filters everything against `memory/surfacing-prefs.md` before render. Writes a markdown twin to `<config-root>/briefs/YYYY-MM-DD.md`. Run again any time to refresh; state persists in localStorage `brief-YYYY-MM-DD`.
+description: Generate or refresh today's daily brief as the persistent Cowork artifact "Today's Brief" (stable id `todays-brief`). Renders 5 fixed sections — Center of Gravity, Calendar Block (visual timeline + written list), Priority Tasks (richer actions), Outreach Queue (actions + category tags), Yesterday's Reflection. Filters everything against `memory/me/surfacing-prefs.md` before render. Writes a markdown twin to `<config-root>/briefs/YYYY-MM-DD.md`. Run again any time to refresh; state persists in localStorage `brief-YYYY-MM-DD`.
 ---
 
 # /brief
@@ -39,7 +39,7 @@ Read `<config-root>/memory/me/identity.md` for time zone (defines "today") and t
 
 ### D — Load surfacing preferences (v0.5.0 — REQUIRED filter)
 
-Read `<config-root>/memory/surfacing-prefs.md`. This is the canonical suppression store (written by `/end-day` from `not_important` actions and the repeat-ignore rule). Parse:
+Read `<config-root>/memory/me/surfacing-prefs.md`. This is the canonical suppression store (written by `/end-day` from `not_important` actions and the repeat-ignore rule). Parse:
 
 - **Do-not-resurface list** — explicit per-item suppressions. An item whose title/source matches a suppressed entry MUST NOT be rendered as a priority task or outreach item, unless its linked re-surface condition has flipped.
 - **Surfacing rules** — noise classes (admin/finance dunning, vendor cert/onboarding nudges). Items matching a noise class are demoted (never P0/P1); route to a low-priority "admin" mention at most, or drop.
