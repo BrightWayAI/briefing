@@ -1,6 +1,6 @@
 {
   "name": "briefing",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Today's Brief. Combine calendar, tasks, outreach, inbox, CRM, and Cortex context into a daily brief, then process user-approved annotations and plan tomorrow.",
   "author": {
     "name": "BrightWay AI",

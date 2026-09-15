@@ -25,7 +25,7 @@ See `commands/brief.md` for the full generation workflow.
 
 - **Drafting or sending anything.** This is read-only. Drafting happens in `/process-brief` after the user annotates.
 - **Multi-day planning.** This is today only. For tomorrow, use this plugin's `/plan-tomorrow`.
-- **Weekly summaries.** Use `growth` (relationships, absorbed referral-engine), or cortex's `/review` for week-level work.
+- **Weekly summaries.** Use `growth` (relationships, absorbed referral-engine), or this plugin's own `/review` for week-level work.
 - **Replacing the dashboard.** Cortex's `DASHBOARD.md` is the always-on memory index. The brief is a daily working surface that includes today's slice of dashboard context.
 
 ## Inputs

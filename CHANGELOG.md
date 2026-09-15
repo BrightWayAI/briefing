@@ -4,6 +4,24 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.10.0] — absorbs `/review`, `/timeline` (cortex), `/dashboard` (ops) (2026-09-15)
+
+Part of the "Today's Brief is every what's-going-on surface at any cadence" consolidation.
+
+### Added
+- `commands/review.md` + `skills/review/SKILL.md` — synthesized weekly digest, moved from `cortex`. Rewritten to resolve `<config-root>` via `commands/brief.md` Step A's precedence chain (the old `cortex`-specific `references/core-contract.md` reference doesn't exist in this plugin) and rewritten as a native briefing SKILL.md (the cortex-generated Codex-adapter wrapper assumed cortex's own repo layout — `AGENTS.md`, `scripts/cortex_cli.py` — which don't exist here).
+- `commands/timeline.md` + `skills/timeline/SKILL.md` — chronological activity view, moved from `cortex`. Same `<config-root>` resolution fix.
+- `commands/dashboard.md` + `skills/dashboard/SKILL.md` + `references/nucleus-dashboard-template.html` — rich visual Cowork-artifact stack surface, moved from `ops`. `ops` retains `/status` (terse text) and `/diagnose` (troubleshooting) — those did not move.
+
+### Changed
+- `skills/brief/SKILL.md` — "weekly summaries" pointer updated from "cortex's `/review`" to this plugin's own `/review`.
+
+## [0.9.0] — `/setup-voice` ownership moves to Comms Desk (2026-09-15)
+
+### Changed
+- `skills/setup/SKILL.md` updated to attribute `/setup-voice` to Comms Desk instead of cortex.
+- `commands/process-brief.md` `draft_reply` action now degrades gracefully with an explicit "No voice file found — using generic tone; run comms's `/setup-voice` to fix this" message when `<config-root>/memory/me/voice.md` doesn't exist, instead of silently assuming it's present.
+
 ## [0.8.0] — pipeline-analyst ownership moved to growth (2026-09-15)
 
 ### Changed

@@ -1,0 +1,407 @@
+<!--
+  nucleus-dashboard-template.html — ops plugin
+
+  Rendered by the /dashboard skill into a Cowork artifact titled
+  "Nucleus Dashboard." The skill replaces tokens of the form {{TOKEN}}
+  with computed values. Repeating-block comments (BEGIN ... END) get
+  replaced with N rendered list items.
+
+  Template tokens (top-level):
+    {{LAST_RENDERED}}          ISO timestamp
+    {{TODAY_LOCAL}}             YYYY-MM-DD
+    {{TZ_LABEL}}                e.g., America/New_York
+    {{CONFIG_ROOT}}             absolute path
+
+  Section state tokens:
+    {{STACK_CONFIGURED_COUNT}}  e.g., 10
+    {{STACK_TEMPLATE_COUNT}}    e.g., 1
+    {{STACK_MISSING_COUNT}}     e.g., 3
+    {{CONNECTORS_LIST}}         pre-rendered <span> chips
+    {{WEEK_TOTAL_RUNS}}         integer
+    {{WEEK_HISTOGRAM_SVG}}      SVG inline bar chart for 7 daily counts
+    {{MEMORY_NODE_COUNT}}       integer
+    {{MEMORY_STATE_DIST_SVG}}   SVG inline donut or bar of Fresh/Stale/Dormant/Cold percentages
+    {{PERSON_PAGES_LINE}}       e.g., "7 active · 2 cooling · 1 dormant · 0 archived"
+    {{TRIAGE_LINE}}             e.g., "Commit decisions this week: 12 commit / 5 skip"
+    {{OUTREACH_SECTION_HTML}}   pre-rendered card body, OR a placeholder "not available"
+    {{TIME_SECTION_HTML}}       same pattern
+    {{IMPACT_SECTION_HTML}}     v1 placeholder; v1.1 ships content
+
+  Repeating-block markers:
+    <!-- BEGIN PLUGINS_CONFIGURED --> ... <!-- END -->
+    <!-- BEGIN PLUGINS_TEMPLATE --> ... <!-- END -->
+    <!-- BEGIN PLUGINS_MISSING --> ... <!-- END -->
+    <!-- BEGIN TOP_SKILLS --> ... <!-- END -->
+    <!-- BEGIN RUSTY_SKILLS --> ... <!-- END -->
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Nucleus Dashboard</title>
+  <style>
+    :root {
+      --bg: #fafaf9;
+      --card: #ffffff;
+      --border: #e7e5e4;
+      --muted: #78716c;
+      --text: #1c1917;
+      --accent: #0f766e;
+      --accent-soft: #ccfbf1;
+      --warn: #d97706;
+      --warn-soft: #fef3c7;
+      --bad: #b91c1c;
+      --bad-soft: #fee2e2;
+      --good: #15803d;
+      --good-soft: #dcfce7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 24px;
+      line-height: 1.5;
+    }
+    header {
+      max-width: 1080px;
+      margin: 0 auto 16px;
+    }
+    header h1 {
+      margin: 0 0 4px;
+      font-size: 22px;
+      font-weight: 700;
+    }
+    header .meta {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    main {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    section.card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 20px;
+    }
+    section.card.wide {
+      grid-column: 1 / -1;
+    }
+    section.card h2 {
+      margin: 0 0 12px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-tag {
+      display: inline-block;
+      font-size: 11px;
+      color: var(--muted);
+      background: #f5f5f4;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 500;
+    }
+    .badge.good { color: var(--good); background: var(--good-soft); }
+    .badge.warn { color: var(--warn); background: var(--warn-soft); }
+    .badge.bad { color: var(--bad); background: var(--bad-soft); }
+    .stat-row {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      padding: 6px 0;
+      border-top: 1px solid var(--border);
+      font-size: 14px;
+    }
+    .stat-row:first-of-type {
+      border-top: none;
+    }
+    .stat-row .label {
+      flex: 1;
+      color: var(--muted);
+    }
+    .stat-row .value {
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .plugin-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .plugin-list li {
+      display: inline-block;
+      padding: 2px 8px;
+      margin: 0 4px 4px 0;
+      border-radius: 4px;
+      background: #f5f5f4;
+      color: var(--text);
+    }
+    .plugin-list.warn li { background: var(--warn-soft); color: var(--warn); }
+    .plugin-list.bad li { background: var(--bad-soft); color: var(--bad); }
+    .connectors {
+      font-size: 13px;
+      line-height: 1.8;
+    }
+    .connectors .chip {
+      display: inline-block;
+      padding: 2px 8px;
+      margin: 0 4px 4px 0;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .connectors .chip.on { background: var(--good-soft); color: var(--good); }
+    .connectors .chip.off { background: #f5f5f4; color: var(--muted); }
+    .histogram {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      height: 60px;
+      margin: 12px 0 4px;
+    }
+    .histogram .bar {
+      flex: 1;
+      background: var(--accent);
+      border-radius: 4px 4px 0 0;
+      min-height: 4px;
+    }
+    .histogram .label-row {
+      display: flex;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .histogram .label-row .day {
+      flex: 1;
+      text-align: center;
+    }
+    .skill-line {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding: 4px 0;
+      font-size: 13px;
+    }
+    .skill-line .name {
+      flex: 1;
+      font-family: SF Mono, Menlo, monospace;
+    }
+    .skill-line .count {
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .skill-line .last {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .state-dist {
+      display: flex;
+      height: 24px;
+      border-radius: 6px;
+      overflow: hidden;
+      margin: 8px 0 4px;
+    }
+    .state-dist .seg {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: white;
+      font-weight: 600;
+    }
+    .state-dist .seg.fresh { background: var(--good); }
+    .state-dist .seg.stale { background: var(--warn); }
+    .state-dist .seg.dormant { background: #a8a29e; }
+    .state-dist .seg.cold { background: var(--bad); }
+    .state-dist .seg.demoted { background: #57534e; }
+    .state-legend {
+      display: flex;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .state-legend .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .placeholder {
+      color: var(--muted);
+      font-size: 13px;
+      font-style: italic;
+      padding: 8px 0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Nucleus Dashboard</h1>
+    <div class="meta">Last rendered {{LAST_RENDERED}} · {{TODAY_LOCAL}} · {{TZ_LABEL}} · config-root: <code>{{CONFIG_ROOT}}</code></div>
+  </header>
+
+  <main>
+    <!-- ============== SECTION 1 — STACK OVERVIEW ============== -->
+    <section class="card wide" data-section="stack">
+      <h2>Stack overview <span class="section-tag">14 plugins · 7 subagents</span></h2>
+
+      <div class="stat-row">
+        <span class="label">Plugins configured</span>
+        <span class="value">{{STACK_CONFIGURED_COUNT}}</span>
+      </div>
+      <div class="stat-row">
+        <span class="label">Plugins with template defaults</span>
+        <span class="value">{{STACK_TEMPLATE_COUNT}}</span>
+      </div>
+      <div class="stat-row">
+        <span class="label">Plugins missing setup</span>
+        <span class="value">{{STACK_MISSING_COUNT}}</span>
+      </div>
+
+      <div style="margin-top: 12px;">
+        <div style="font-size: 12px; color: var(--muted); margin-bottom: 4px;">Configured</div>
+        <ul class="plugin-list">
+          <!-- BEGIN PLUGINS_CONFIGURED -->
+          <li>{{PLUGIN_NAME}}</li>
+          <!-- END PLUGINS_CONFIGURED -->
+        </ul>
+      </div>
+
+      <div style="margin-top: 8px;">
+        <div style="font-size: 12px; color: var(--muted); margin-bottom: 4px;">Template defaults — run /setup-* to populate</div>
+        <ul class="plugin-list warn">
+          <!-- BEGIN PLUGINS_TEMPLATE -->
+          <li>{{PLUGIN_NAME}}</li>
+          <!-- END PLUGINS_TEMPLATE -->
+        </ul>
+      </div>
+
+      <div style="margin-top: 8px;">
+        <div style="font-size: 12px; color: var(--muted); margin-bottom: 4px;">Not installed or no user-context found</div>
+        <ul class="plugin-list bad">
+          <!-- BEGIN PLUGINS_MISSING -->
+          <li>{{PLUGIN_NAME}}</li>
+          <!-- END PLUGINS_MISSING -->
+        </ul>
+      </div>
+
+      <div style="margin-top: 14px;">
+        <div style="font-size: 12px; color: var(--muted); margin-bottom: 4px;">Connectors</div>
+        <div class="connectors">
+          {{CONNECTORS_LIST}}
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== SECTION 2 — THIS WEEK ============== -->
+    <section class="card" data-section="this-week">
+      <h2>This week <span class="section-tag">last 7 days</span></h2>
+
+      <div class="stat-row">
+        <span class="label">Total runs</span>
+        <span class="value">{{WEEK_TOTAL_RUNS}}</span>
+      </div>
+
+      <div class="histogram">
+        {{WEEK_HISTOGRAM_SVG}}
+      </div>
+
+      <div style="margin-top: 12px;">
+        <div style="font-size: 12px; color: var(--muted); margin-bottom: 4px;">Top skills</div>
+        <!-- BEGIN TOP_SKILLS -->
+        <div class="skill-line">
+          <span class="name">{{SKILL_NAME}}</span>
+          <span class="count">{{COUNT}}</span>
+          <span class="last">last: {{LAST_RUN}}</span>
+        </div>
+        <!-- END TOP_SKILLS -->
+      </div>
+
+      <!-- BEGIN RUSTY_SKILLS -->
+      <div style="margin-top: 12px;">
+        <div style="font-size: 12px; color: var(--warn); margin-bottom: 4px;">Rusty (no run in 14+ days)</div>
+        <div class="skill-line">
+          <span class="name">{{SKILL_NAME}}</span>
+          <span class="last">last: {{LAST_RUN}}</span>
+        </div>
+      </div>
+      <!-- END RUSTY_SKILLS -->
+    </section>
+
+    <!-- ============== SECTION 3 — CORTEX MEMORY HEALTH ============== -->
+    <section class="card" data-section="memory">
+      <h2>Cortex memory health <span class="section-tag">v4.4 decay</span></h2>
+
+      <div class="stat-row">
+        <span class="label">Active nodes</span>
+        <span class="value">{{MEMORY_NODE_COUNT}}</span>
+      </div>
+
+      <div>
+        <div style="font-size: 12px; color: var(--muted); margin-top: 12px; margin-bottom: 4px;">Knowledge entry state (sampled)</div>
+        <div class="state-dist">
+          {{MEMORY_STATE_DIST_SVG}}
+        </div>
+        <div class="state-legend">
+          <span><span class="dot" style="background: var(--good);"></span>Fresh</span>
+          <span><span class="dot" style="background: var(--warn);"></span>Stale</span>
+          <span><span class="dot" style="background: #a8a29e;"></span>Dormant</span>
+          <span><span class="dot" style="background: var(--bad);"></span>Cold</span>
+          <span><span class="dot" style="background: #57534e;"></span>Demoted</span>
+        </div>
+      </div>
+
+      <div class="stat-row" style="margin-top: 12px;">
+        <span class="label">Person pages</span>
+        <span class="value">{{PERSON_PAGES_LINE}}</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="label">Triage log (this week)</span>
+        <span class="value">{{TRIAGE_LINE}}</span>
+      </div>
+    </section>
+
+    <!-- ============== SECTION 4 — OUTREACH PIPELINE ============== -->
+    <section class="card" data-section="outreach">
+      <h2>Relationship pipeline <span class="section-tag">growth</span></h2>
+      {{OUTREACH_SECTION_HTML}}
+    </section>
+
+    <!-- ============== SECTION 5 — TIME + INVOICING ============== -->
+    <section class="card" data-section="time">
+      <h2>Time + invoicing <span class="section-tag">admin</span></h2>
+      {{TIME_SECTION_HTML}}
+    </section>
+
+    <!-- ============== SECTION 6 — IMPACT LOOP (v1 placeholder) ============== -->
+    <section class="card wide" data-section="impact">
+      <h2>Impact loop <span class="section-tag">v1.1</span></h2>
+      {{IMPACT_SECTION_HTML}}
+    </section>
+  </main>
+</body>
+</html>

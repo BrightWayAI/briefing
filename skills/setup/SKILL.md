@@ -24,7 +24,7 @@ See `commands/setup-brief.md` for the full setup workflow.
 
 ## What this skill is NOT for
 
-- **Capturing identity / voice / company info.** Those are already in `<config-root>/memory/me/identity.md` and `<config-root>/memory/me/voice.md` from cortex's `/setup-identity` and `/setup-voice`. This setup reads them; it doesn't re-ask.
+- **Capturing identity / voice / company info.** Those are already in `<config-root>/memory/me/identity.md` and `<config-root>/memory/me/voice.md` from cortex's `/setup-identity` and Comms Desk's `/setup-voice`. This setup reads them; it doesn't re-ask.
 - **Connecting MCPs.** This is a config-only interview. If a connector isn't wired, the relevant section will simply render "source not connected" in `/brief`.
 - **Picking a config root.** If the config root pointer doesn't exist yet, Step 0 prompts for it once — but that's a marketplace-wide convention, not a brief-specific decision.
 

@@ -94,7 +94,7 @@ For `clarify` items, batch them: ask the user one combined question listing each
 ### draft_reply (inbox item)
 
 1. Read the original thread via Gmail MCP using the `thread_id` from the item ID.
-2. Call the comms plugin's draft skill if installed (or inline draft using `<config-root>/memory/me/voice.md`). Build a reply that captures the user's intent from `annotation_text`.
+2. Call the comms plugin's draft skill if installed (or inline draft using `<config-root>/memory/me/voice.md`). Build a reply that captures the user's intent from `annotation_text`. If `voice.md` doesn't exist, don't stop — draft in a generic tone and note in the response: "No voice file found — using generic tone; run comms's `/setup-voice` to fix this."
 3. Save as a Gmail draft via `mcp__f77d3a90-04d4-4394-96b5-a5d4402dfe0a__create_draft` (or whichever Gmail tool the runtime exposes).
 4. Capture the draft URL / Gmail draft ID for the run summary + markdown twin.
 
