@@ -1,4 +1,4 @@
-# OpenAI portability contract — Today's Brief (briefing)
+# OpenAI portability contract — Today's Brief
 
 This file binds the plugin's canonical Claude-oriented examples to ChatGPT and Codex.
 It changes tool names and unavailable-host behavior, not the workflow's business logic

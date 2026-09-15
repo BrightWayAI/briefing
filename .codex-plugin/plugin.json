@@ -1,14 +1,14 @@
 {
   "name": "briefing",
-  "version": "0.8.0",
-  "description": "Today's Brief. Combine calendar, tasks, outreach, inbox, CRM, and Cortex context into a daily brief, then process user-approved annotations and plan tomorrow.",
+  "version": "0.10.2",
+  "description": "Combine calendar, tasks, outreach, inbox, CRM, and Cortex context into a daily brief, then process user-approved annotations and plan tomorrow.",
   "author": {
     "name": "BrightWay AI",
     "url": "https://brightwayai.com"
   },
   "license": "MIT",
-  "homepage": "https://github.com/BrightWayAI/daily-brief",
-  "repository": "https://github.com/BrightWayAI/daily-brief",
+  "homepage": "https://github.com/BrightWayAI/briefing",
+  "repository": "https://github.com/BrightWayAI/briefing",
   "keywords": [
     "nucleus",
     "chatgpt",
@@ -26,7 +26,7 @@
       "Write",
       "Interactive"
     ],
-    "websiteURL": "https://github.com/BrightWayAI/daily-brief",
+    "websiteURL": "https://github.com/BrightWayAI/briefing",
     "defaultPrompt": [
       "Build today's brief.",
       "Process these brief annotations.",

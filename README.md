@@ -101,13 +101,13 @@ See `docs/proposals/SECOND-BRAIN-V2-SPEC.md` in the marketplace repo for the ful
 <!-- OPENAI-SUPPORT:START -->
 ## ChatGPT and Codex
 
-Today's Brief (briefing) ships as a native OpenAI plugin as well as a Claude plugin. In
+Today's Brief ships as a native OpenAI plugin as well as a Claude plugin. In
 ChatGPT desktop Local Work, enable **Today's Brief** and ask naturally or mention
 `@Today's Brief`. In Codex, use natural language or the namespaced skills exposed
 by the plugin. Claude slash-command names in this README remain workflow aliases.
 
 All hosts resolve the same `<config-root>` used by Cortex, so Claude, ChatGPT desktop,
-and Codex can share identity, comms (voice), memory, and per-plugin settings without copying
+and Codex can share identity, voice, memory, and per-plugin settings without copying
 them. The installed plugin directory is read-only at runtime. See
 [`references/openai-portability.md`](references/openai-portability.md) for capability
 mapping, connector checks, permissions, and honest degraded behavior.

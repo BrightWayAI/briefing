@@ -7,6 +7,16 @@ metadata:
   chatgpt-work-status: supported
 ---
 
+<!-- OPENAI-ADAPTER:START -->
+## OpenAI host binding
+
+Before acting, read `../../references/openai-portability.md`. That file translates
+host-specific tools, agents, artifacts, scheduling, connectors, and config-root
+access for ChatGPT and Codex. It overrides concrete Claude/Cowork tool names only;
+the workflow, safety gates, and output contract in this skill remain canonical.
+<!-- OPENAI-ADAPTER:END -->
+
+
 # Cortex: timeline
 
 This is a thin host adapter. Starting from this loaded `SKILL.md` file, walk upward to the nearest directory containing `AGENTS.md`, `commands/timeline.md`, and `scripts/cortex_cli.py`; call it `<cortex-repo-root>`. Do not assume the current working directory is the Cortex repository. If no such root is readable, stop.
