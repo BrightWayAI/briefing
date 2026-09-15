@@ -1,6 +1,6 @@
-# daily-brief user context (TEMPLATE)
+# briefing user context (TEMPLATE)
 
-_Run `/setup-brief` to generate your real `<config-root>/plugins/daily-brief.user-context.md` (gitignored)._
+_Run `/setup-brief` to generate your real `<config-root>/plugins/briefing.user-context.md` (gitignored)._
 
 _Last updated: [filled by setup]_
 
@@ -19,7 +19,7 @@ The canonical brief renders 5 fixed sections in this order (End-Day Routine Impr
 ## Sort defaults
 - **meetings:** [start_time_asc / start_time_desc — default start_time_asc]
 - **tasks:** [priority_then_due / due_then_priority — default priority_then_due]
-- **outreach:** [accept_upstream — default; pre-sorted by the relationships/lead-engine pipeline]
+- **outreach:** [accept_upstream — default; pre-sorted by the growth (relationships/lead-engine) pipeline]
 
 ## Empty-state behavior
 - **calendar:** [show_empty / hide — default hide]

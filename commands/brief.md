@@ -34,12 +34,12 @@ accessible, prompt the user to run `/setup-brief` and stop.
 
 ### B — Load plugin config
 
-Read `<config-root>/plugins/daily-brief.user-context.md`.
+Read `<config-root>/plugins/briefing.user-context.md`.
 
 - **Exists** → parse `sections_enabled`, sort defaults, empty-state behavior, annotation placeholders.
-- **Missing** → ask: "I don't see your daily-brief config. Want to run `/setup-brief` first, or use defaults?" Default to "use defaults" if the user is in a hurry.
+- **Missing** → ask: "I don't see your briefing config. Want to run `/setup-brief` first, or use defaults?" Default to "use defaults" if the user is in a hurry.
 
-If `brief_enabled` is `false`, stop with: "Daily brief is disabled. Re-enable in `<config-root>/plugins/daily-brief.user-context.md`."
+If `brief_enabled` is `false`, stop with: "Daily brief is disabled. Re-enable in `<config-root>/plugins/briefing.user-context.md`."
 
 ### C — Load shared identity
 
@@ -100,7 +100,7 @@ For each surviving task capture: stable `task-<id>` id, title, due date, related
 
 ### Outreach Queue (section 4)
 
-Source from Relationships (look in `<config-root>/relationships/today.json` if
+Source from Growth (relationships) (look in `<config-root>/relationships/today.json` if
 present, otherwise its current queue). Existing installs may read the legacy
 `<config-root>/plugins/weekly-outreach.*` fallback only during migration and must
 label it as legacy in the output. <!-- LEGACY_COMPAT -->
@@ -260,10 +260,10 @@ const outreach    = state.outreach_actions || {};     // {contact_id: {name, act
 
 1. `mcp__cowork__list_artifacts` → look for id `todays-brief`.
 2. If found, check `metadata.target_date`:
-   - `== intended-date` (`today_local` for `/brief`, `tomorrow_local` for `/end-day` Step 5) → `mcp__cowork__update_artifact(artifact_id="todays-brief", content=<HTML>, mcp_tools=[<FS_WRITE_TOOL from Step 3.0, when resolved>], metadata={target_date, plugin:"daily-brief", schema_version:"0.6.0"})`. Preserve matching annotation/task state by item id (Step 3a).
+   - `== intended-date` (`today_local` for `/brief`, `tomorrow_local` for `/end-day` Step 5) → `mcp__cowork__update_artifact(artifact_id="todays-brief", content=<HTML>, mcp_tools=[<FS_WRITE_TOOL from Step 3.0, when resolved>], metadata={target_date, plugin:"briefing", schema_version:"0.6.0"})`. Preserve matching annotation/task state by item id (Step 3a).
    - `!= intended-date` → DO NOT silently overwrite. Surface: "⚠ `todays-brief` exists with target_date `<existing>`; about to write `<new>`. This is a `/brief`↔`/end-day` race. Proceed (last-write-wins) or abort?" On proceed → update; on abort → exit Step 3.
    - older than `today_local` → update with fresh content (the old day's final state is in its markdown twin).
-3. If not found → `mcp__cowork__create_artifact(id="todays-brief", artifact_type="html", content=<HTML>, mcp_tools=[<FS_WRITE_TOOL from Step 3.0, when resolved>], metadata={target_date, plugin:"daily-brief", schema_version:"0.6.0"})`.
+3. If not found → `mcp__cowork__create_artifact(id="todays-brief", artifact_type="html", content=<HTML>, mcp_tools=[<FS_WRITE_TOOL from Step 3.0, when resolved>], metadata={target_date, plugin:"briefing", schema_version:"0.6.0"})`.
 
 Always pass `mcp_tools` when Step 3.0 resolved a tool — the allowlist lives in the artifact manifest, and an `update_artifact` that omits it keeps the prior grant (safe), but a `create_artifact` without it leaves the artifact unable to auto-sync until the next update.
 
@@ -298,4 +298,4 @@ Don't dump the brief content into chat.
 - Same-day re-run = refresh + preserve action/annotation state by item id. Different day = new content; yesterday's file preserved.
 - If a source MCP isn't connected, that section renders "[Section]: source not connected — connect the MCP and re-run." No silent failure.
 - Cost: ~3-5K tokens of synthesis on top of connector payloads. Per-section caps: 12 meetings, 12 tasks, 10 outreach.
-- Telemetry: optionally log one line to core-ops `/log-agent-run` (skill: brief, item_counts, filtered_count, runtime_ms). Skip if core-ops isn't installed.
+- Telemetry: optionally log one line to ops `/log-agent-run` (skill: brief, item_counts, filtered_count, runtime_ms). Skip if ops isn't installed.

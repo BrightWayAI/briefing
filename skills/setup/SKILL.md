@@ -1,7 +1,7 @@
 ---
 disable-model-invocation: true
 name: setup
-description: One-time interview that configures the daily-brief plugin — section order, sort defaults, empty-state behavior, annotation placeholder hints, optional auto-run schedule. Auto-fires on "/setup-brief", "configure daily-brief", "set up the brief", "configure my brief", or when the user runs `/brief` and no config file exists. Writes results to `<config-root>/plugins/daily-brief.user-context.md`. Re-run anytime to update.
+description: One-time interview that configures the briefing plugin — section order, sort defaults, empty-state behavior, annotation placeholder hints, optional auto-run schedule. Auto-fires on "/setup-brief", "configure briefing", "set up the brief", "configure my brief", or when the user runs `/brief` and no config file exists. Writes results to `<config-root>/plugins/briefing.user-context.md`. Re-run anytime to update.
 ---
 
 <!-- OPENAI-ADAPTER:START -->
@@ -19,8 +19,8 @@ See `commands/setup-brief.md` for the full setup workflow.
 ## When this skill fires
 
 - User runs `/setup-brief` directly
-- User says: "configure daily-brief", "set up the brief", "configure my brief"
-- User runs `/brief` and no `<config-root>/plugins/daily-brief.user-context.md` exists — `/brief` offers to run setup or fall back to defaults
+- User says: "configure briefing", "set up the brief", "configure my brief"
+- User runs `/brief` and no `<config-root>/plugins/briefing.user-context.md` exists — `/brief` offers to run setup or fall back to defaults
 
 ## What this skill is NOT for
 
@@ -31,14 +31,14 @@ See `commands/setup-brief.md` for the full setup workflow.
 ## Inputs
 
 - `<config-root>/memory/me/identity.md` (read-only) — time zone, tool inventory
-- Existing `<config-root>/plugins/daily-brief.user-context.md` (if present) — to update a subset rather than start over
+- Existing `<config-root>/plugins/briefing.user-context.md` (if present) — to update a subset rather than start over
 - `references/user-context.template.md` (bundled with plugin source) — structure for the output file
 
 ## Outputs
 
-- `<config-root>/plugins/daily-brief.user-context.md` — captured preferences
+- `<config-root>/plugins/briefing.user-context.md` — captured preferences
 - `<config-root>/briefs/` directory created if missing
-- (Optional) registered scheduled task via core-ops `/register-schedules` if user opts in
+- (Optional) registered scheduled task via ops `/register-schedules` if user opts in
 
 ## Behavior rules
 

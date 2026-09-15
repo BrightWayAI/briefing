@@ -1,12 +1,12 @@
 ---
-description: Configure the daily-brief plugin — section order, empty-source behavior, default sort, and annotation placeholder text. Writes results to `<config-root>/plugins/daily-brief.user-context.md` through the shared vendor-neutral resolver. Re-run anytime to update.
+description: Configure the briefing plugin — section order, empty-source behavior, default sort, and annotation placeholder text. Writes results to `<config-root>/plugins/briefing.user-context.md` through the shared vendor-neutral resolver. Re-run anytime to update.
 ---
 
 # /setup-brief
 
 Short interview that configures your daily brief: sort defaults, empty-state behavior, the task annotation hint, and the default source set for `/end-day`'s review-and-cost card. (The 5-section layout itself is fixed as of v0.5.0.)
 
-This plugin assumes identity, voice, Core Ops, and Relationships setup are already done (or skipped). It doesn't re-ask those questions.
+This plugin assumes identity, comms, ops, and growth setup are already done (or skipped). It doesn't re-ask those questions.
 
 ---
 
@@ -39,15 +39,15 @@ Once the user provides the path:
 
 Read `<config-root>/memory/me/identity.md` if present. This setup doesn't need most of it — but the user's time zone matters for "today" calculations, and the configured calendar / email / CRM tools influence which sections this plugin actually has data for. If `identity.md` is missing, prompt the user to run cortex's `/setup-identity` first (preferred) or skip and accept defaults.
 
-For the rest of this document, **`<config-root>`** refers to the resolved path. This plugin's config file lives at **`<config-root>/plugins/daily-brief.user-context.md`**, and the brief markdown snapshots live at **`<config-root>/briefs/YYYY-MM-DD.md`**.
+For the rest of this document, **`<config-root>`** refers to the resolved path. This plugin's config file lives at **`<config-root>/plugins/briefing.user-context.md`**, and the brief markdown snapshots live at **`<config-root>/briefs/YYYY-MM-DD.md`**.
 
 ---
 
 ## Step 1 — Check for existing config
 
-Read `<config-root>/plugins/daily-brief.user-context.md` if it exists.
+Read `<config-root>/plugins/briefing.user-context.md` if it exists.
 
-- If it exists and is populated → ask: "You've already configured daily-brief. Want to update specific sections, or start over?"
+- If it exists and is populated → ask: "You've already configured briefing. Want to update specific sections, or start over?"
   - "Update [section]" → jump to that section, ask only those questions, write back.
   - "Start over" → continue full interview.
 - If it doesn't exist → start fresh. Read `references/user-context.template.md` (bundled with the plugin source) for the structure to populate.
@@ -74,7 +74,7 @@ There's nothing to enable/disable; confirm the user understands the fixed model 
 
 - Meetings: `start_time_asc` (default) | `start_time_desc`
 - Tasks: `priority_then_due` (default) | `due_then_priority`
-- Outreach queue: comes pre-sorted from the relationships/lead-engine pipeline; default `accept_upstream`
+- Outreach queue: comes pre-sorted from the growth (relationships/lead-engine) pipeline; default `accept_upstream`
 
 ### Section 3 — Empty-state behavior
 
@@ -102,7 +102,7 @@ Ask: "Want to customize the placeholder hint or the default source set, or accep
 Should `/brief` register a scheduled task to run automatically each weekday morning?
 
 - `no` (default) — user runs `/brief` manually
-- `yes` — register via core-ops `/register-schedules` if installed; otherwise note that scheduling is unavailable in this install
+- `yes` — register via ops `/register-schedules` if installed; otherwise note that scheduling is unavailable in this install
 
 If yes, ask for time (default 7:30am in the user's time zone) and weekdays (default Mon-Fri).
 
@@ -139,7 +139,7 @@ Skippable; the manual Sync button + `/end-day`'s paste path work without it.
 
 ## Step 3 — Write the user-context file
 
-Populate `<config-root>/plugins/daily-brief.user-context.md` from the template in `references/user-context.template.md`. Fill in the captured values; leave commented placeholders for anything skipped. Create the parent `plugins/` directory if it doesn't exist.
+Populate `<config-root>/plugins/briefing.user-context.md` from the template in `references/user-context.template.md`. Fill in the captured values; leave commented placeholders for anything skipped. Create the parent `plugins/` directory if it doesn't exist.
 
 Also create `<config-root>/briefs/` if it doesn't exist (where the markdown snapshots will land).
 

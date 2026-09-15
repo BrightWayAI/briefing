@@ -1,7 +1,7 @@
 ---
 disable-model-invocation: true
 name: setup-plan
-description: Configure the /plan-tomorrow command (now hosted in the daily-brief plugin as of v0.2.0) for your CRM, working hours, calendar conventions, and companion-plugin integrations. Auto-fires on "/setup-plan", "set up plan-tomorrow", "configure daily planning", or when /plan-tomorrow reports user-context.md is missing. The standalone plan-tomorrow plugin is deprecated; this skill lives in daily-brief now.
+description: Configure the /plan-tomorrow command (now hosted in the briefing plugin as of v0.2.0) for your CRM, working hours, calendar conventions, and companion-plugin integrations. Auto-fires on "/setup-plan", "set up plan-tomorrow", "configure daily planning", or when /plan-tomorrow reports user-context.md is missing. The standalone plan-tomorrow plugin is deprecated; this skill lives in briefing now.
 ---
 
 <!-- OPENAI-ADAPTER:START -->

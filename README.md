@@ -1,8 +1,8 @@
-# daily-brief
+# briefing
 
 > Your daily flow — today's working surface + tomorrow's calendar planning in one plugin.
 
-**As of v0.2.0**, daily-brief absorbs the deprecated `plan-tomorrow` plugin. One home for the daily ops loop: `/brief` and `/process-brief` for today, `/brief --tomorrow` for tomorrow. As of 2026-09-15, `/brief --tomorrow` is the documented entry point for next-day planning (`/plan-tomorrow` remains a direct alias — same procedure, both reach it).
+**As of v0.2.0**, briefing (then daily-brief) absorbs the deprecated `plan-tomorrow` plugin. One home for the daily ops loop: `/brief` and `/process-brief` for today, `/brief --tomorrow` for tomorrow. As of 2026-09-15, `/brief --tomorrow` is the documented entry point for next-day planning (`/plan-tomorrow` remains a direct alias — same procedure, both reach it).
 
 Pulls today's calendar, inbox action items, CRM priority tasks, outreach queue, yesterday's reflection — into a single Cowork artifact titled "Today's Brief." You open it once a day, write short instructions into the textareas under each item ("draft reply: short ack + my view," "move to tomorrow," "ask about pricing"), and then run `/process-brief`. Claude reads your annotations and acts: drafts replies in Gmail, reschedules tasks in your CRM, appends talking points to meeting prep — all as drafts and reversible updates, never sends.
 
@@ -84,7 +84,7 @@ Every side-effect is reversible: Gmail drafts (not sends), CRM date updates (not
 
 ## Configuration
 
-All per-user config lives at `<config-root>/plugins/daily-brief.user-context.md`. The first-run `/setup-brief` interview generates this file. Re-run setup any time to change preferences.
+All per-user config lives at `<config-root>/plugins/briefing.user-context.md`. The first-run `/setup-brief` interview generates this file. Re-run setup any time to change preferences.
 
 `<config-root>` is the user-chosen folder for marketplace plugin config, recorded at `~/Documents/.claude-plugin-config-root`. See the marketplace README for the convention.
 
@@ -101,13 +101,13 @@ See `docs/proposals/SECOND-BRAIN-V2-SPEC.md` in the marketplace repo for the ful
 <!-- OPENAI-SUPPORT:START -->
 ## ChatGPT and Codex
 
-Daily Brief ships as a native OpenAI plugin as well as a Claude plugin. In
-ChatGPT desktop Local Work, enable **Daily Brief** and ask naturally or mention
-`@Daily Brief`. In Codex, use natural language or the namespaced skills exposed
+Today's Brief (briefing) ships as a native OpenAI plugin as well as a Claude plugin. In
+ChatGPT desktop Local Work, enable **Today's Brief** and ask naturally or mention
+`@Today's Brief`. In Codex, use natural language or the namespaced skills exposed
 by the plugin. Claude slash-command names in this README remain workflow aliases.
 
 All hosts resolve the same `<config-root>` used by Cortex, so Claude, ChatGPT desktop,
-and Codex can share identity, voice, memory, and per-plugin settings without copying
+and Codex can share identity, comms (voice), memory, and per-plugin settings without copying
 them. The installed plugin directory is read-only at runtime. See
 [`references/openai-portability.md`](references/openai-portability.md) for capability
 mapping, connector checks, permissions, and honest degraded behavior.

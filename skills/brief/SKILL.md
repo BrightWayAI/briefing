@@ -25,18 +25,18 @@ See `commands/brief.md` for the full generation workflow.
 
 - **Drafting or sending anything.** This is read-only. Drafting happens in `/process-brief` after the user annotates.
 - **Multi-day planning.** This is today only. For tomorrow, use this plugin's `/plan-tomorrow`.
-- **Weekly summaries.** Use `relationships`, `referral-engine`, or cortex's `/review` for week-level work.
+- **Weekly summaries.** Use `growth` (relationships, absorbed referral-engine), or cortex's `/review` for week-level work.
 - **Replacing the dashboard.** Cortex's `DASHBOARD.md` is the always-on memory index. The brief is a daily working surface that includes today's slice of dashboard context.
 
 ## Inputs
 
 - `<config-root>/memory/me/identity.md` — time zone, tool inventory
-- `<config-root>/plugins/daily-brief.user-context.md` — section toggles, sort defaults, empty-state behavior, annotation placeholder hints
+- `<config-root>/plugins/briefing.user-context.md` — section toggles, sort defaults, empty-state behavior, annotation placeholder hints
 - `<config-root>/memory/me/surfacing-prefs.md` — **required filter**: do-not-resurface list + noise rules applied to tasks/outreach before render
 - `<config-root>/memory/DASHBOARD.md` — active project context (cortex)
 - Calendar MCP — today's events (timeline strip + written list with per-meeting context)
 - HubSpot MCP — priority tasks (owner=you, due today / overdue; P0/P1 only)
-- relationships pipeline (`<config-root>/relationships/today.json`) / lead-engine — outreach queue (legacy weekly-outreach fallback)
+- growth pipeline (`<config-root>/relationships/today.json`) / lead-engine — outreach queue (legacy weekly-outreach fallback)
 - `<config-root>/briefs/<yesterday>.md` — yesterday's reflection (`## Reflection`)
 
 ## Outputs

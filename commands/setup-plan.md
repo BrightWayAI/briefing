@@ -77,8 +77,8 @@ One section at a time. Confirm before moving on.
 - Send-updates default — usually "none" for personal blocks (recommended; otherwise attendees get spammed)
 
 ### Section 5 — Companion plugin integrations
-- Is `claude-cortex` installed? (Y/N — drives whether memory is read)
-- Is `core-ops` installed? (Y/N — drives whether `pipeline-analyst` is delegated to)
+- Is `cortex` installed? (Y/N — drives whether memory is read)
+- Is `ops` installed? (Y/N — drives whether `pipeline-analyst` is delegated to)
 - Is `weekly-outreach` installed? (Y/N — drives whether outreach contacts are pulled from the weekly queue)
 
 ### Section 6 — Optional preferences
@@ -129,8 +129,8 @@ _Last updated: [date]_
 - **Send-updates default:** none
 
 ## Companion plugins
-- **claude-cortex:** [installed / not installed]
-- **core-ops (pipeline-analyst):** [installed / not installed]
+- **cortex:** [installed / not installed]
+- **ops (pipeline-analyst):** [installed / not installed]
 - **weekly-outreach:** [installed / not installed]
 
 ## Preferences

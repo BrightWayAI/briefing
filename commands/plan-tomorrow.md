@@ -19,7 +19,7 @@ Extract:
 - CRM (tool name, owner ID)
 - Working hours (start, end, time zone)
 - Calendar conventions (color for task blocks, emoji map, max blocks per day)
-- Companion plugins (cortex installed? core-ops for pipeline-analyst? relationships for daily brief? legacy weekly-outreach?)
+- Companion plugins (cortex installed? ops for pipeline-analyst? growth for daily brief? legacy weekly-outreach?)
 
 ---
 
@@ -51,8 +51,8 @@ Query your calendar for the target day, working-hours window. Capture:
 - Free slots available for task blocks
 
 ### 2B — Pull project tasks from CRM
-**If `pipeline-analyst` is available** (core-ops installed): use the Task tool with `subagent_type="pipeline-analyst"` and pass:
-- `user-context-path` — path to core-ops's user-context (or this plugin's, if it has CRM details)
+**If `pipeline-analyst` is available** (ops installed): use the Task tool with `subagent_type="pipeline-analyst"` and pass:
+- `user-context-path` — path to ops's user-context (or this plugin's, if it has CRM details)
 - `time-window` — 14 days
 - `focus-filter` — `"deals or contacts with action due today or tomorrow"`
 - `top-n` — 5
@@ -62,7 +62,7 @@ The agent returns a ranked list. Use the top items as candidate task blocks.
 **If pipeline-analyst is not available** (or this plugin's user-context says CRM is "none"): query the CRM directly for tasks owned by you (per `crm-owner-id` in user-context), status NOT_STARTED or IN_PROGRESS, due on/before the target day. Sort by priority then due date.
 
 ### 2C — Pull project context from working memory
-**If `claude-cortex` is installed:** memory lives at `<config-root>/memory/` (resolve `<config-root>` per cortex's `references/core-contract.md` §1 — never hardcode a path). Read `DASHBOARD.md` for the master index, then read individual node files for active projects. Extract: P0/P1 actions, open threads, deadlines, blockers.
+**If `cortex` is installed:** memory lives at `<config-root>/memory/` (resolve `<config-root>` per cortex's `references/core-contract.md` §1 — never hardcode a path). Read `DASHBOARD.md` for the master index, then read individual node files for active projects. Extract: P0/P1 actions, open threads, deadlines, blockers.
 
 **If cortex is not installed:** skip this step. Note in the final output that memory wasn't available.
 
@@ -73,7 +73,7 @@ Search Gmail (or whatever email connector is available) for:
 - Implied action items in recent threads
 
 ### 2E — Check for outreach plan (if applicable)
-**If `relationships` (v0.2.0+) is installed:** read `<config-root>/relationships/today.json` for today's surfaced outreach actions. Pull those that haven't been marked done in `events.jsonl`. These feed Step 3's outreach block.
+**If `growth` (relationships, v0.2.0+) is installed:** read `<config-root>/relationships/today.json` for today's surfaced outreach actions. Pull those that haven't been marked done in `events.jsonl`. These feed Step 3's outreach block.
 
 **If only legacy `weekly-outreach` is installed (retired plugin):** check whether it produced a current week's outreach queue. If so, pull the remaining contacts (not yet sent) and any HOLDING PATTERN entries.
 

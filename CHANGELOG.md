@@ -4,6 +4,11 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.7.0] — renamed to briefing (2026-09-15)
+
+### Changed
+- Renamed from `daily-brief` to `briefing` (display name: Today's Brief) as part of the 2026-09-15 Nucleus plugin rename. Old plugin ID/repo name redirects; see marketplace catalog.
+
 ## [0.6.10] — consolidation boundary hardening (2026-09-15)
 
 ### Changed

@@ -1,5 +1,5 @@
 ---
-description: Act on the actions + annotations the user wrote into today's brief artifact. Reads the artifact via Cowork's read_widget_context (canonical v0.5.0 JSON-blob shape — tasks/annotations/outreach_actions), routes each annotation to the right downstream skill (draft reply → relationships /draft-touchpoint, move task → CRM), and stages task actions (done→COMPLETED, delegate→delegatee task, skip→defer) and outreach actions (sent/nudge/booked/let_go) to CRM and person/bizdev nodes. Intra-day actor; durable memory write-backs + suppression learning happen in /end-day Step 2c. Never sends anything; drafts only.
+description: Act on the actions + annotations the user wrote into today's brief artifact. Reads the artifact via Cowork's read_widget_context (canonical v0.5.0 JSON-blob shape — tasks/annotations/outreach_actions), routes each annotation to the right downstream skill (draft reply → growth /draft-touchpoint, move task → CRM), and stages task actions (done→COMPLETED, delegate→delegatee task, skip→defer) and outreach actions (sent/nudge/booked/let_go) to CRM and person/bizdev nodes. Intra-day actor; durable memory write-backs + suppression learning happen in /end-day Step 2c. Never sends anything; drafts only.
 ---
 
 # /process-brief
@@ -41,7 +41,7 @@ If the user declines the paste and no source yielded state: stop with — "`/pro
 
 ### Reading the JSON-blob state (canonical v0.6.0 shape)
 
-Parse the blob (per `daily-brief/commands/brief.md` localStorage contract):
+Parse the blob (per `briefing/commands/brief.md` localStorage contract):
 
 ```javascript
 const state = JSON.parse(mirrorFile || widget_context["brief-<today_local>"] || "{}");
@@ -75,13 +75,13 @@ For each `(item_id, annotation_text)` pair, classify the user's intent. Use a sm
 
 | Pattern in annotation_text | Normalized action | Routing |
 |---|---|---|
-| "draft reply" / "reply: ..." / "draft response ..." | `draft_reply` | relationships `/draft-touchpoint` (or lead-engine for sales-context cold-prospect threads) |
+| "draft reply" / "reply: ..." / "draft response ..." | `draft_reply` | growth `/draft-touchpoint` (or lead-engine for sales-context cold-prospect threads) |
 | "move to tomorrow" / "move to <date>" | `reschedule_task` | HubSpot MCP (CRM task update_date) — only valid for task items |
 | "skip" / "ignore" / "I'll handle this" / "dismiss" | `dismiss` | log only; no downstream action |
-| "draft outreach" / "send DM" (for outreach-group only) | `draft_outreach` | relationships `/draft-touchpoint` (preferred) or lead-engine; legacy weekly-outreach fallback only when relationships not installed |
+| "draft outreach" / "send DM" (for outreach-group only) | `draft_outreach` | growth `/draft-touchpoint` (preferred) or lead-engine; legacy weekly-outreach fallback only when growth not installed |
 | Anything else / ambiguous | `clarify` | ask the user a one-line follow-up in chat |
 
-**Note:** `add_talking_point` (formerly for meeting annotations) was removed in daily-brief v0.3.0 — meetings are now read-only context cards in `/brief`. Use cortex `/recall <person>` for prep context instead, or edit the markdown snapshot directly.
+**Note:** `add_talking_point` (formerly for meeting annotations) was removed in briefing v0.3.0 — meetings are now read-only context cards in `/brief`. Use cortex `/recall <person>` for prep context instead, or edit the markdown snapshot directly.
 
 Two-stage triage: classify cheaply first (Haiku-class, just the text + a one-word menu), then dispatch only the items that need synthesis (draft_reply, draft_outreach) to Sonnet-tier work. Items that are pure routing (reschedule_task, dismiss) don't need synthesis at all.
 
@@ -94,13 +94,13 @@ For `clarify` items, batch them: ask the user one combined question listing each
 ### draft_reply (inbox item)
 
 1. Read the original thread via Gmail MCP using the `thread_id` from the item ID.
-2. Call the voice plugin's draft skill if installed (or inline draft using `<config-root>/memory/me/voice.md`). Build a reply that captures the user's intent from `annotation_text`.
+2. Call the comms plugin's draft skill if installed (or inline draft using `<config-root>/memory/me/voice.md`). Build a reply that captures the user's intent from `annotation_text`.
 3. Save as a Gmail draft via `mcp__f77d3a90-04d4-4394-96b5-a5d4402dfe0a__create_draft` (or whichever Gmail tool the runtime exposes).
 4. Capture the draft URL / Gmail draft ID for the run summary + markdown twin.
 
 ### draft_outreach (outreach group)
 
-Hand off to the relevant outreach plugin's draft skill — preferred: relationships `/draft-touchpoint` (v0.2.0+); fallback: lead-engine or legacy weekly-outreach if `relationships` isn't installed. Pass the annotation text as the instruction. Outreach drafts are written to Gmail or LinkedIn (per the outreach plugin's logic) as drafts only. Capture the result for the run summary + markdown twin.
+Hand off to the relevant outreach plugin's draft skill — preferred: growth `/draft-touchpoint` (v0.2.0+); fallback: lead-engine or legacy weekly-outreach if `growth` isn't installed. Pass the annotation text as the instruction. Outreach drafts are written to Gmail or LinkedIn (per the outreach plugin's logic) as drafts only. Capture the result for the run summary + markdown twin.
 
 ### reschedule_task (task item)
 
@@ -110,7 +110,7 @@ Hand off to the relevant outreach plugin's draft skill — preferred: relationsh
 
 ### dismiss
 
-Log to `<config-root>/plugins/daily-brief.dismissed-log.md` (append-only) one line:
+Log to `<config-root>/plugins/briefing.dismissed-log.md` (append-only) one line:
 
 ```
 <today_local> <ISO-time> <item_id> dismissed: <first 80 chars of annotation>
@@ -134,7 +134,7 @@ Walk `state.tasks`. Route by `action`:
 
 **`skip`** (`detail` = snooze duration, e.g. `3d`) — queue a due-date push on the source task by the parsed duration (same path as `reschedule_task`). This is the intra-day version; `/end-day` separately increments the per-task skip counter for the repeat-ignore rule.
 
-**`not_important`** — do NOT write to CRM here. Log it for `/end-day` to fold into `surfacing-prefs.md`: append a line to `<config-root>/plugins/daily-brief.dismissed-log.md` as `<today> <ISO-time> task-<id> not_important: <title>`. (The authoritative suppression write happens in `/end-day` Step 2c.)
+**`not_important`** — do NOT write to CRM here. Log it for `/end-day` to fold into `surfacing-prefs.md`: append a line to `<config-root>/plugins/briefing.dismissed-log.md` as `<today> <ISO-time> task-<id> not_important: <title>`. (The authoritative suppression write happens in `/end-day` Step 2c.)
 
 Batch all CRM intents and present one confirmation table before writing:
 
@@ -149,13 +149,13 @@ From today's brief task actions:
 
 On Y → batch CRM writes; report successes/failures. On N → no CRM writes (localStorage state persists; `/end-day` will still mine it). On E → per-row toggle, then batch.
 
-If `relationships` is installed and a `done`/`delegate` task is associated with a person in `memory/person/`, invoke `/touchpoint <person> --channel=task --summary="<action> via brief"` to log it. (Legacy fallback: `weekly-outreach` outreach state.)
+If `growth` is installed and a `done`/`delegate` task is associated with a person in `memory/person/`, invoke `/touchpoint <person> --channel=task --summary="<action> via brief"` to log it. (Legacy fallback: `weekly-outreach` outreach state.)
 
 ## Step 3.7 — Route outreach actions (v0.5.0)
 
 Walk `state.outreach_actions`. Each entry carries `action` + optional `bucket` / `value_add` / `signal`.
 
-- **`sent`** — log a touch on the contact's person/bizdev node (or hand to relationships `/draft-touchpoint` if a draft is still needed). Record `bucket` + `value_add` + `signal` on the touch so outreach analytics can roll them up.
+- **`sent`** — log a touch on the contact's person/bizdev node (or hand to growth `/draft-touchpoint` if a draft is still needed). Record `bucket` + `value_add` + `signal` on the touch so outreach analytics can roll them up.
 - **`nudge`** — log a follow-up touch (with `detail` snooze if present).
 - **`booked`** — advance the pipeline stage and create a CRM prep task.
 - **`let_go` / `dead`** — log and remove the contact from the active queue.
@@ -198,5 +198,5 @@ Don't dump the action details into chat — they're in the markdown twin and the
 - Reschedule >14 days out asks for confirmation inline before writing to CRM.
 - Ambiguous annotations are batched into one clarification question, not one-per-item.
 - Cost: classifier is Haiku-class. Synthesis (draft writes) is Sonnet, gated to items that need it.
-- Telemetry: optionally log one line to core-ops `/log-agent-run` per run (skill: process-brief, action_counts: {draft_reply, reschedule_task, dismiss, task_done, task_delegate, task_skip, task_not_important, outreach_sent, outreach_nudge, outreach_booked, outreach_let_go}, runtime_ms).
+- Telemetry: optionally log one line to ops `/log-agent-run` per run (skill: process-brief, action_counts: {draft_reply, reschedule_task, dismiss, task_done, task_delegate, task_skip, task_not_important, outreach_sent, outreach_nudge, outreach_booked, outreach_let_go}, runtime_ms).
 - Privacy: annotation text and draft bodies are processed in-context and stored in Gmail / CRM / markdown snapshot. They're not exfiltrated anywhere else.

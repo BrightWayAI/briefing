@@ -1,4 +1,4 @@
-# Daily Brief — OpenAI host entrypoint
+# Today's Brief (briefing) — OpenAI host entrypoint
 
 This repository supports Claude Code/Cowork, ChatGPT desktop Local Work, and Codex
 from one canonical workflow source.

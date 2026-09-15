@@ -1,7 +1,7 @@
 ---
 disable-model-invocation: true
 name: setup-brief
-description: "Configure the daily-brief plugin — section order, empty-source behavior, default sort, and annotation placeholder text. Writes results to `<config-root>/plugins/daily-brief.user-context.md` through the shared vendor-neutral resolver. Re-run anytime to update."
+description: "Configure the briefing plugin — section order, empty-source behavior, default sort, and annotation placeholder text. Writes results to `<config-root>/plugins/briefing.user-context.md` through the shared vendor-neutral resolver. Re-run anytime to update."
 ---
 
 # setup-brief

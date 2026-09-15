@@ -40,7 +40,7 @@ See `commands/process-brief.md` for the full workflow.
 - CRM updates: due-date reschedules (`reschedule_task` / `skip`), COMPLETED (`done`), delegatee tasks (`delegate`)
 - Touchpoints / pipeline updates on person/bizdev nodes (outreach `sent`/`nudge`/`booked`/`let_go`)
 - `### Processed annotations` block appended to the markdown twin
-- Append-only line in `<config-root>/plugins/daily-brief.dismissed-log.md` for each `dismiss` / `not_important`
+- Append-only line in `<config-root>/plugins/briefing.dismissed-log.md` for each `dismiss` / `not_important`
 
 ## Routing table
 
@@ -48,8 +48,8 @@ See `commands/process-brief.md` for the full workflow.
 
 | Annotation pattern | Action | Tool |
 |---|---|---|
-| "draft reply" / "reply: ..." | `draft_reply` | relationships `/draft-touchpoint` or lead-engine + Gmail MCP |
-| "draft outreach" | `draft_outreach` | relationships `/draft-touchpoint` (fallback: lead-engine) |
+| "draft reply" / "reply: ..." | `draft_reply` | growth `/draft-touchpoint` or lead-engine + Gmail MCP |
+| "draft outreach" | `draft_outreach` | growth `/draft-touchpoint` (fallback: lead-engine) |
 | "move to tomorrow" / "move to <date>" | `reschedule_task` | HubSpot MCP |
 | "skip" / "dismiss" / "I'll handle this" | `dismiss` | log only |
 | Free-text / ambiguous | `clarify` | batched follow-up question in chat |
