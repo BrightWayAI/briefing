@@ -1,5 +1,5 @@
 ---
-description: Generate or refresh today's daily brief as the persistent Cowork artifact "Today's Brief" (stable id `todays-brief`). Renders 5 fixed sections — Center of Gravity, Calendar Block (visual timeline + written list), Priority Tasks (richer actions), Outreach Queue (actions + category tags), Yesterday's Reflection. Filters everything against `memory/me/surfacing-prefs.md` before render. Writes a markdown twin to `<config-root>/briefs/YYYY-MM-DD.md`. Run again any time to refresh; state persists in localStorage `brief-YYYY-MM-DD`. `/brief --tomorrow [date?]` dispatches to calendar-first next-day planning (see Step -1) — same job the retired standalone `/plan-tomorrow` command did.
+description: Generate or refresh today's daily brief as the persistent Cowork artifact "Today's Brief" (stable id `todays-brief`). Renders 6 fixed sections — Center of Gravity, Calendar Block (visual timeline + written list with per-meeting notes), Priority Tasks (richer actions), Outreach Queue (actions + category tags + annotation + skip duration), Yesterday's Reflection (read-only), Today's Reflection (editable). Filters everything against `memory/me/surfacing-prefs.md`, yesterday's closures, and the snooze ledger before render. Writes a markdown twin to `<config-root>/briefs/YYYY-MM-DD.md`. Run again any time to refresh; state persists in localStorage `brief-YYYY-MM-DD` (schema_version 0.7.0) and mirrors to `briefs/YYYY-MM-DD.state.json`, mined nightly by cortex `/listen`. `/brief --tomorrow [date?]` dispatches to calendar-first next-day planning (see Step -1) — same job the retired standalone `/plan-tomorrow` command did.
 ---
 
 # /brief
@@ -7,11 +7,11 @@ description: Generate or refresh today's daily brief as the persistent Cowork ar
 Builds today's working surface. The output is two coordinated things:
 
 1. A **markdown twin** for audit at `<config-root>/briefs/YYYY-MM-DD.md` (the canonical text record).
-2. A live Cowork **artifact** with stable id `todays-brief` — the working surface, with richer per-item actions that persist to localStorage and get mined by `/end-day`.
+2. A live Cowork **artifact** with stable id `todays-brief` — the working surface, with richer per-item actions that persist to localStorage and get mined overnight by cortex `/listen`.
 
-This command is **read-only across all sources**. It does not draft replies, modify CRM tasks, or send anything. Acting on annotations happens in `/process-brief`; mining the actions happens in `/end-day`.
+This command is **read-only across all sources**. It does not draft replies, modify CRM tasks, or send anything. Acting on annotations happens in `/process-brief`; the durable write-backs (closing source-node actions, suppression learning, snooze ledger, reflection) happen in `/listen` Step 1.5, reviewed the next morning via `/morning`. None of this depends on `/end-day`, which is optional.
 
-**The brief is a working surface, not a read-only snapshot (v0.5.0).** Every interactive action writes to one localStorage blob keyed `brief-YYYY-MM-DD` and is mined by `/end-day` Step 2c.
+**The brief is a working surface, not a read-only snapshot (v0.5.0).** Every interactive action writes to one localStorage blob keyed `brief-YYYY-MM-DD` and is mined by `/listen` Step 1.5.
 
 ---
 
@@ -45,14 +45,24 @@ If `brief_enabled` is `false`, stop with: "Daily brief is disabled. Re-enable in
 
 Read `<config-root>/memory/me/identity.md` for time zone (defines "today") and tool inventory (decides which sections will have data).
 
+### D0 — Read closures + snooze ledger (v0.7.0 — REQUIRED before render)
+
+Before pulling any live source, read three files that describe what already happened to yesterday's brief:
+
+1. `<config-root>/briefs/<yesterday_local>.closures.json` (written by `/listen` Step 1.5, or absent if `/listen` hasn't run or found nothing). If present, parse `closed`, `carried`, `snoozed`, `suppressed`, `annotations`.
+2. `<config-root>/briefs/.snooze-ledger.json` — the canonical snooze ledger (see `/listen` Step 1.5h). Entries keyed by brief item id: `{title, kind, node, return_on, skipped_on, skip_count, last_detail}`.
+3. If `<config-root>/relationships/today.json` is present, it still drives the outreach queue as today's live pull (Step 1). If it's **missing**, build the outreach queue from: snooze-ledger returns (kind=outreach) + unclosed outreach items from yesterday's brief + person/bizdev node open loops, and say so in the twin footer ("today.json not found. Outreach built from carryover + snooze returns").
+
+Any of these three files being absent is normal on a fresh install or the first day — proceed with empty sets, don't treat it as an error.
+
 ### D — Load surfacing preferences (v0.5.0 — REQUIRED filter)
 
-Read `<config-root>/memory/me/surfacing-prefs.md`. This is the canonical suppression store (written by `/end-day` from `not_important` actions and the repeat-ignore rule). Parse:
+Read `<config-root>/memory/me/surfacing-prefs.md`. This is the canonical suppression store (written by `/listen` Step 1.5 from `not_important` actions and the repeat-ignore rule, or by `/end-day` Step 2c when the user still runs it). Parse:
 
 - **Do-not-resurface list** — explicit per-item suppressions. An item whose title/source matches a suppressed entry MUST NOT be rendered as a priority task or outreach item, unless its linked re-surface condition has flipped.
 - **Surfacing rules** — noise classes (admin/finance dunning, vendor cert/onboarding nudges). Items matching a noise class are demoted (never P0/P1); route to a low-priority "admin" mention at most, or drop.
 
-If `surfacing-prefs.md` is missing, proceed without filtering but note it once: "No surfacing-prefs.md found — brief is unfiltered. `/end-day` will create it the first time you mark something 'not important.'"
+If `surfacing-prefs.md` is missing, proceed without filtering but note it once: "No surfacing-prefs.md found. Brief is unfiltered. It'll be created the first time you mark something 'not important' and `/listen` mines it overnight."
 
 ### E — Resolve dates
 
@@ -65,7 +75,15 @@ When `/end-day` invokes this command to pre-stage, it passes `target_date = tomo
 
 ## Step 1 — Pull source data (in parallel where possible), then filter
 
-Pull each section's source, then **apply the Step 0D filter before anything is rendered**. Suppressed/noise items are dropped silently; log the count of filtered items for the markdown twin's footer ("N items filtered by surfacing-prefs").
+Pull each section's source, then **apply the Step 0D0 closures/ledger pass, then the Step 0D surfacing-prefs filter, before anything is rendered**.
+
+**Closures/ledger pass (v0.7.0):** for every task/outreach candidate pulled from a live source:
+- If its id appears in `closed` or `suppressed` (from yesterday's `.closures.json`) → drop it. It's done or dead; don't re-render it.
+- If its id appears in the snooze ledger with `return_on > today_local` → drop it, but count it toward the footer's "N snoozed."
+- If its id appears in the snooze ledger with `return_on <= today_local` → include it in the **Today** tier regardless of what the live source says (the ledger is itself a source — a live source that forgot about it doesn't override a legitimate return), tag its row sub-line "back from snooze (skipped `<skipped_on>`, `<skip_count>`x)", and clear its ledger entry once it has rendered (not before — a render failure shouldn't silently lose the return).
+- If its id appears in `annotations` from `.closures.json` and the live source still carries it (carried-forward item), show the annotation text in the row sub-line.
+
+Suppressed/noise items (surfacing-prefs) are dropped silently; log the count for the markdown twin's footer, alongside the closures/snooze counts: "N items filtered by surfacing-prefs · Closed since yesterday: `<list>` · N snoozed · N returned".
 
 ### Center of Gravity (section 1)
 
@@ -118,10 +136,10 @@ Each row renders per-contact actions (Sent / Nudge / Booked / Skip / Let go) plu
 
 ### Yesterday's Reflection (section 5)
 
-Read `<config-root>/briefs/<yesterday_local>.md` `## Reflection` (written by `/end-day` Step 4). Show at minimum **biggest thing done** and **the one thing that has to move today** (the latter also feeds section 1).
+Read `<config-root>/briefs/<yesterday_local>.md` `## Reflection` (written by `/listen` Step 1.5g from the artifact's own "Today's Reflection" card, by `/morning` Step 4.6, or by `/end-day` Step 4 when the user still runs it). Show at minimum **biggest thing done** and **the one thing that has to move today** (the latter also feeds section 1).
 
 - Exists with `## Reflection` → render read-only.
-- Exists without it → "No reflection logged yesterday — run `/end-day` next time to capture one."
+- Exists without it → "No reflection logged yesterday. Fill in Today's reflection at the bottom of the brief."
 - Missing → "No brief yesterday."
 
 Always render this card (it's required).
@@ -135,7 +153,7 @@ Write the assembled content to `<config-root>/briefs/<today_local>.md`. The mark
 ```markdown
 # Today's Brief — <today_local>
 
-> Generated <ISO-8601 timestamp> · <N> items filtered by surfacing-prefs
+> Generated <ISO-8601 timestamp> · <N> items filtered by surfacing-prefs · Closed since yesterday: <list or "none"> · <N> snoozed · <N> returned
 
 ## 1. Center of Gravity
 
@@ -183,14 +201,24 @@ Create `<config-root>/briefs/` if missing. Overwrite today's file on re-run; yes
 
 **Artifact identity rule:** the artifact id is ALWAYS `todays-brief`. Both `/brief` and cortex `/end-day` Step 5 `update_artifact` this same surface. Never create a parallel artifact; never produce a markdown-only fallback when Cowork is available. Formatting MUST be identical regardless of which command produced it.
 
-### Step 3.0 — Resolve the state-mirror write tool (D2a, v0.6.1)
+### Step 3.0 — Resolve the state-mirror write tool (D2a, v0.6.1; hosted path added v0.7.0)
 
 The artifact sandbox can only call MCP tools that are (a) fully qualified `mcp__<server>__<tool>`, (b) declared in the artifact's `mcp_tools` allowlist at create/update time, and (c) actually connected to Cowork. There is **no built-in filesystem tool** — auto-sync works only when the user has connected a filesystem-capable MCP server (see `/setup-brief` § Enable brief auto-sync).
 
+**First, determine the runtime.** Desktop Cowork and hosted claude.ai artifacts both render the same HTML, but only desktop Cowork's `window.cowork.callMcpTool` bridge can reach a filesystem MCP server — a hosted claude.ai artifact runs in a browser tab with no MCP bridge at all, only `localStorage` (which lives in that browser and is unreachable by any scheduled or headless command).
+
+**Desktop Cowork path (unchanged):**
 1. Scan the session's available MCP tools for a file-write tool (canonical: `mcp__filesystem__write_file` from the reference filesystem server; any server exposing a write-file tool qualifies). Prefer one whose allowed roots cover `<config-root>/briefs/`.
-2. **Verify it this session** (the sandbox bridge requires this discipline — never declare an unverified tool): if `<config-root>/briefs/<today_local>.state.json` is missing, write an empty v0.6.0 blob (`{"schema_version":"0.6.0","tasks":{},"annotations":{},"outreach_actions":{},"tasks_checked":{}}`) through the tool; if it already exists, re-write its current content verbatim. Confirm the write landed. A side benefit: `/end-day` always finds a state file, even on a zero-action day.
+2. **Verify it this session** (the sandbox bridge requires this discipline — never declare an unverified tool): if `<config-root>/briefs/<today_local>.state.json` is missing, write an empty v0.7.0 blob (`{"schema_version":"0.7.0","tasks":{},"annotations":{},"outreach_actions":{},"reflection":{},"tasks_checked":{}}`) through the tool; if it already exists, re-write its current content verbatim. Confirm the write landed. A side benefit: `/listen` always finds a state file, even on a zero-action day.
 3. On success → `{{FS_WRITE_TOOL}}` = the verified tool name, `{{STATE_MIRROR_PATH}}` = the **absolute** path `<config-root>/briefs/<today_local>.state.json`, and pass `mcp_tools=["<tool>"]` on the Step 3 `create_artifact`/`update_artifact` call. If the verified tool's args differ from `{path, content}`, adapt the `mirrorState()` call in the rendered HTML to match what you verified.
-4. On no tool found (or verify failed) → `{{FS_WRITE_TOOL}}` = `""`, `{{STATE_MIRROR_PATH}}` = the absolute path anyway (harmless), omit `mcp_tools`. The artifact shows a persistent "auto-sync unavailable" banner steering the user to the manual **🔄 Sync for end-day** button, and Step 4's chat message must say so once.
+4. On no tool found (or verify failed) → `{{FS_WRITE_TOOL}}` = `""`, `{{STATE_MIRROR_PATH}}` = the absolute path anyway (harmless), omit `mcp_tools`. Fall through to the hosted/degraded behavior below.
+
+**Hosted claude.ai path (v0.7.0):** if the render target is a hosted claude.ai artifact (not desktop Cowork), load the **artifact-capabilities skill** before assuming there is no bridge — it documents whatever shared-state capability is actually available at render time (this changes over time; don't hardcode an API surface here). Concretely:
+1. Load the artifact-capabilities skill and ask it what shared-state / persistent-storage capability, if any, this hosted artifact can call to write a blob outside its own browser tab.
+2. If it reports a usable capability → wire the rendered HTML's `mirrorState()` to call it (same shape as the desktop path: write the JSON blob, treat a thrown error / error response the same as `isError`), and record which capability so the preflight step below (used by `/brief`, `/process-brief`, `/end-day`, `/listen`) knows how to read it back.
+3. If it reports no usable capability → degrade explicitly: `{{FS_WRITE_TOOL}}` = `""`, and the rendered artifact shows the persistent manual-sync banner. Do not invent an API call that hasn't been confirmed to exist.
+
+**Preflight (all four commands, v0.7.0):** `/brief`, `/process-brief`, `/end-day`, and `/listen` each open with a preflight step that, when running against a hosted artifact with a discovered shared-state capability, reads that store back and writes it to `<config-root>/briefs/<today_local>.state.json` before doing anything else — this is what turns "state lives in a browser tab" into "state lives on disk where a headless command can see it." On desktop Cowork this preflight is a no-op (the mirror already wrote the file directly). When no capability was ever discovered, the preflight is also a no-op and the existing manual-sync-banner path is the only bridge.
 
 Load `references/brief-artifact-template.html` (v2 layout). Substitute these tokens with today's filtered data:
 
@@ -206,64 +234,69 @@ Load `references/brief-artifact-template.html` (v2 layout). Substitute these tok
 **2. Calendar** — feed the visual strip via the `<script>` constants, then repeat the written `.cal-item` block:
 - `{{TL_START_HOUR}}` / `{{TL_END_HOUR}}` = the day window in whole hours (default `8` / `18`). `{{TL_WINDOW_LABEL}}` = e.g. "8a–6p".
 - `{{TL_BLOCKS_JSON}}` = a JS array literal, one object per event, **decimal hours**: `[{s:9.5,e:10,label:'Automation chat',cls:'meeting'},{s:12,e:13,label:'Focus',cls:'focus'}]`. `cls` ∈ `meeting` | `focus` | `personal`. Emit `[]` if no events. (The template's `buildTimeline()` positions blocks against the window — no manual `left%`/`width%`.)
-- Repeat the `.cal-item` block per event: `{{EVENT_TIME}}` (e.g. "9:30–10:00"), `{{EVENT_TITLE}}`, `{{EVENT_WHO}}` (attendees + location), `{{EVENT_NOTES}}` (the one-line context / why-this-matters / last-touch; omit the `.cal-notes` div if no notes).
+- Repeat the `.cal-item` block per event: `{{EVENT_ID}}` (stable per-event id, e.g. the calendar event id — drives the per-meeting note textarea's annotation key `event-<id>`), `{{EVENT_TIME}}` (e.g. "9:30–10:00"), `{{EVENT_TITLE}}`, `{{EVENT_WHO}}` (attendees + location), `{{EVENT_NOTES}}` (the one-line context / why-this-matters / last-touch; omit the `.cal-notes` div if no notes). If a note already exists for this event (from `annotations["event-<id>"]` in yesterday's or today's own carried-forward state), the template pre-fills the textarea on load — no extra token needed, the JS reads `state.annotations` directly.
 
 **3. Priority Tasks** — repeat the `.task-row` block per task (P0/P1 only, post-filter):
 - `data-id="task-<id>"`, `{{TASK_ID}}` = same id, `{{TASK_NAME}}` = title, `{{TASK_PRIORITY}}` = `P0`/`P1`, `{{TASK_PRIORITY_CLASS}}` = `` for P0 or ` p1` for P1, `{{TASK_SUB}}` = one-line context, `{{HINT_TASK}}` = annotation placeholder from config.
 
 **4. Outreach Queue** — repeat the `.outreach-row` block per contact (post-filter, ordered today → this week → backlog):
-- `data-id="outreach-<id>"`, `{{CONTACT_ID}}` = same id, `{{CONTACT_NAME}}`, `{{CONTACT_SUB}}` = title/company · last touch · one-line why.
+- `data-id="outreach-<id>"`, `{{CONTACT_ID}}` = same id, `{{CONTACT_NAME}}`, `{{CONTACT_SUB}}` = title/company · last touch · one-line why. If the item is back from snooze (Step 0D0), append the "back from snooze" sub-line here.
 - **Signal auto-fill:** in the `.oc-signal` select, emit the contact's pipeline signal as the FIRST `<option>` so it's pre-selected (fall back to `—` first if no signal). Bucket/value-add stay at their template defaults (optional — the user can change them; they're captured on action).
 - `{{CONTACT_LINK}}` = the `research_url` resolved in Step 1; `{{CONTACT_LINK_LABEL}}` = `🔗 LinkedIn` when a real profile URL is known, else `🔍 Research`.
+- Each row also carries an annotation textarea (same `annotations` map, keyed by `outreach-<id>`) and a Skip action that opens an inline duration mini-form (v0.7.0) instead of committing immediately — see the localStorage contract below.
 
-**5. Yesterday's Reflection** — `{{YESTERDAY_LABEL}}` = e.g. "Mon 6/8"; `{{REFLECT_BIGGEST}}` / `{{REFLECT_BLOCKED}}` / `{{REFLECT_ONE_THING}}` from yesterday's `## Reflection` (use "—" for blanks).
+**5. Reflection** — `{{YESTERDAY_LABEL}}` = e.g. "Mon 6/8"; `{{REFLECT_BIGGEST}}` / `{{REFLECT_BLOCKED}}` / `{{REFLECT_ONE_THING}}` from yesterday's `## Reflection` (use "—" for blanks). This card is read-only. **Today's Reflection** (the second card, v0.7.0) has no tokens — it's an empty editable form on first render; if today's brief already has a `state.reflection` from a prior same-day re-run, the template restores it from `state` on load like every other field.
 
 Hide any non-required card whose content is empty by omitting its `<div class="card" data-section="...">`. Center of Gravity and Yesterday's Reflection always render. To hide the calendar strip cleanly when there are no events, emit `{{TL_BLOCKS_JSON}}` = `[]` and omit the calendar card.
 
-### localStorage contract (canonical — schema_version 0.6.0)
+### localStorage contract (canonical — schema_version 0.7.0)
 
 ONE JSON blob per day at key `brief-<today_local>`:
 
 ```json
 {
-  "schema_version": "0.6.0",
-  "tasks":            { "<task-id>":    { "action": "done|delegate|skip|not_important", "detail": "", "priority": "P0|P1|P2", "reprioritized": true, "ts": "", "name": "" } },
+  "schema_version": "0.7.0",
+  "tasks":            { "<task-id>":    { "action": "done|delegate|skip|not_important", "detail": "", "return_on": "YYYY-MM-DD (skip only)", "priority": "P0|P1|P2", "reprioritized": true, "ts": "", "name": "" } },
   "annotations":      { "<item-id>":    "free text" },
-  "outreach_actions": { "<contact-id>": { "name": "", "action": "sent|nudge|skip|let_go|booked|dead", "bucket": "", "signal": "", "value_add": "", "detail": "", "ts": "" } },
+  "outreach_actions": { "<contact-id>": { "name": "", "action": "sent|nudge|skip|let_go|booked|dead", "bucket": "", "signal": "", "value_add": "", "detail": "", "return_on": "YYYY-MM-DD (skip only)", "ts": "" } },
+  "reflection":       { "biggest": "", "blocked": "", "one_thing": "", "ts": "" },
   "tasks_checked":    { "<task-id>": true },
   "last_interaction_at": "ISO8601"
 }
 ```
 
-`tasks_checked` is a back-compat mirror — the template sets `tasks_checked[id] = (action === "done")` whenever a task action fires, so v0.4.x readers keep working. New readers use `tasks`. The UI emits outreach actions `sent|nudge|skip|let_go`; `booked`/`dead` are reader-accepted synonyms (`dead` = `let_go`) but not rendered by default.
+`tasks_checked` is a back-compat mirror — the template sets `tasks_checked[id] = (action === "done")` whenever a task action fires, so v0.4.x readers keep working. New readers use `tasks`. The UI emits outreach actions `sent|nudge|skip|let_go`; `booked`/`dead` are reader-accepted synonyms (`dead` = `let_go`) but not rendered by default. `annotations` now also includes outreach-row annotations (keyed by `outreach-<id>`, same map) and per-meeting calendar notes (keyed by `event-<id>`) — readers that only expected task/inbox ids must not assume a fixed id prefix set.
 
 **New in 0.6.0 (D3 reprioritize):** a task row can carry an on-the-fly priority change. `reprioritize` merges `{ priority, reprioritized: true }` into the existing `tasks[id]` entry **without clobbering its `action`**. An entry may therefore have `reprioritized: true` + `priority` and **no `action`** (priority changed, no disposition yet) — readers must tolerate a missing `action`.
 
-**New in 0.6.0 (D2a state mirror), fixed in 0.6.1:** because Cowork exposes no widget-context handle for *persisted* artifacts, the template mirrors this full blob to `<config-root>/briefs/<date>.state.json` on every action. **The mirror is not free:** the sandbox bridge (`window.cowork.callMcpTool`) only reaches a fully-qualified MCP tool that Step 3.0 verified and declared in the artifact's `mcp_tools` allowlist — 0.6.0 shipped with a malformed tool name (`fs__write_file`), no allowlist declaration, and no `isError` check, so auto-sync silently never worked. When no writable tool resolves, the artifact shows a persistent banner steering the user to the manual **🔄 Sync for end-day** button (copies the blob; `/end-day` accepts the paste and writes the state file itself). This file is `/end-day`'s canonical read path — see below.
+**New in 0.6.0 (D2a state mirror), fixed in 0.6.1, extended in 0.7.0:** because Cowork exposes no widget-context handle for *persisted* artifacts, the template mirrors this full blob to `<config-root>/briefs/<date>.state.json` on every action. **The mirror is not free:** the sandbox bridge (`window.cowork.callMcpTool`) only reaches a fully-qualified MCP tool that Step 3.0 verified and declared in the artifact's `mcp_tools` allowlist. When no writable tool resolves (desktop, no filesystem MCP connected — or hosted claude.ai with no discovered shared-state capability), the artifact shows a persistent banner steering the user to the manual **🔄 Sync brief state** button (renamed in 0.7.0 — it no longer belongs only to `/end-day`; it copies the blob and any of `/process-brief`, `/end-day`, or `/listen`'s preflight can accept the paste). This file is the canonical read path for every downstream reader — see below.
+
+**New in 0.7.0:** `tasks[id].return_on` / `outreach_actions[id].return_on` — an absolute date computed client-side (`skipDuration()` in the template) when the user picks a skip duration (1d / 3d / next week / 2 weeks / 1 month / pick a date). 1d/3d land on a weekday. `reflection` — the editable "Today's Reflection" card's three fields, autosaved on input like annotations. Outreach rows gained an `annotations["outreach-<id>"]` textarea and a Skip mini-form (previously Skip committed immediately with no detail).
 
 **Sandbox invariant (D1):** the template contains **no** `prompt()`/`confirm()`/`alert()` — Cowork's artifact iframe silently blocks native dialogs, which made Delegate/Skip/Not-important dead buttons before 0.6.0. All detail-capture and confirmation is inline (`.mini-form` + two-tap confirm).
 
-Reader pattern (used by `/process-brief` and `/end-day`):
+Reader pattern (used by `/process-brief` and `/listen`):
 
 ```javascript
-const state = JSON.parse(widget_context["brief-<date>"] || "{}");
-const tasks       = state.tasks || {};               // {task_id: {action, detail, ts, name}}
-const annotations = state.annotations || {};          // {item_id: free-text}
-const outreach    = state.outreach_actions || {};     // {contact_id: {name, action, bucket, signal, value_add, detail, ts}}
+const state = JSON.parse(mirrorFile || widget_context["brief-<date>"] || "{}");
+const tasks       = state.tasks || {};               // {task_id: {action, detail, return_on, ts, name}}
+const annotations = state.annotations || {};          // {item_id: free-text} — task/inbox/outreach/event ids all share this map
+const outreach    = state.outreach_actions || {};     // {contact_id: {name, action, bucket, signal, value_add, detail, return_on, ts}}
+const reflection  = state.reflection || {};            // {biggest, blocked, one_thing, ts}
 ```
 
-**Migration from 0.4.x:** earlier briefs stored `tasks_checked: {id: bool}`. A reader encountering `tasks_checked` but no `tasks` should treat each `true` as `{action: "done"}`. The template's `save()` always writes `schema_version: "0.6.0"` going forward. (0.5.0 blobs read unchanged — 0.6.0 only adds fields.)
+**Migration from 0.4.x–0.6.0:** earlier briefs stored `tasks_checked: {id: bool}` with no `tasks`; treat each `true` as `{action: "done"}`. 0.4.x–0.6.0 blobs are missing `reflection` and `return_on` — treat both as absent, not an error. The template's `save()` always writes `schema_version: "0.7.0"` going forward; every version bump so far has been additive-only, so a 0.7.0 reader can read any older blob and an older reader simply ignores fields it doesn't know about.
 
-**State is read by `/end-day` Step 2c** (mine the brief) and Step 4.0 (pre-fill reflection). Read order (v0.6.1 + cortex v4.13.2): the state-mirror file `<config-root>/briefs/<date>.state.json` **first**, then `mcp__cowork__read_widget_context(artifact_id="todays-brief")` as a legacy fallback, then the **paste path** (`/end-day` asks the user to click 🔄 Sync for end-day and paste the blob, writes it to the state file itself), then `/end-day`'s multi-select fallback gate. The mirror file is authoritative because widget context is empty for persisted artifacts.
+**State is read by `/listen` Step 1.5** (mine yesterday's brief), `/process-brief` Step 1, and `/end-day` Step 2c/4.0 when the user still runs it. Read order: the state-mirror file `<config-root>/briefs/<date>.state.json` **first** (written directly by desktop Cowork, or by the hosted-runtime preflight reading back the discovered shared-state capability — see Step 3.0), then `mcp__cowork__read_widget_context(artifact_id="todays-brief")` as a legacy fallback, then the **paste path** (ask the user to click 🔄 Sync brief state and paste the blob, write it to the state file), then — for `/end-day` only — its multi-select fallback gate. `/listen` is unattended and never prompts; if no source yields a blob it logs one line and runs its inference pass only (see `/listen` Step 1.5f).
 
 ### Decide create vs. update (race-aware)
 
 1. `mcp__cowork__list_artifacts` → look for id `todays-brief`.
 2. If found, check `metadata.target_date`:
-   - `== intended-date` (`today_local` for `/brief`, `tomorrow_local` for `/end-day` Step 5) → `mcp__cowork__update_artifact(artifact_id="todays-brief", content=<HTML>, mcp_tools=[<FS_WRITE_TOOL from Step 3.0, when resolved>], metadata={target_date, plugin:"briefing", schema_version:"0.6.0"})`. Preserve matching annotation/task state by item id (Step 3a).
+   - `== intended-date` (`today_local` for `/brief`, `tomorrow_local` for `/end-day` Step 5) → `mcp__cowork__update_artifact(artifact_id="todays-brief", content=<HTML>, mcp_tools=[<FS_WRITE_TOOL from Step 3.0, when resolved>], metadata={target_date, plugin:"briefing", schema_version:"0.7.0"})`. Preserve matching annotation/task state by item id (Step 3a).
    - `!= intended-date` → DO NOT silently overwrite. Surface: "⚠ `todays-brief` exists with target_date `<existing>`; about to write `<new>`. This is a `/brief`↔`/end-day` race. Proceed (last-write-wins) or abort?" On proceed → update; on abort → exit Step 3.
    - older than `today_local` → update with fresh content (the old day's final state is in its markdown twin).
-3. If not found → `mcp__cowork__create_artifact(id="todays-brief", artifact_type="html", content=<HTML>, mcp_tools=[<FS_WRITE_TOOL from Step 3.0, when resolved>], metadata={target_date, plugin:"briefing", schema_version:"0.6.0"})`.
+3. If not found → `mcp__cowork__create_artifact(id="todays-brief", artifact_type="html", content=<HTML>, mcp_tools=[<FS_WRITE_TOOL from Step 3.0, when resolved>], metadata={target_date, plugin:"briefing", schema_version:"0.7.0"})`.
 
 Always pass `mcp_tools` when Step 3.0 resolved a tool — the allowlist lives in the artifact manifest, and an `update_artifact` that omits it keeps the prior grant (safe), but a `create_artifact` without it leaves the artifact unable to auto-sync until the next update.
 
@@ -282,9 +315,9 @@ In Claude Code (no Cowork artifact tools): Step 3 degrades to writing the markdo
 
 Output exactly one chat message:
 
-> "Brief ready for <today_local>. Open the 'Today's Brief' artifact — act on tasks/outreach inline (those actions feed `/end-day`), annotate anything you want drafted, then run `/process-brief`. Markdown twin at `<config-root>/briefs/<today_local>.md`. <N> items filtered by surfacing-prefs."
+> "Brief ready for <today_local>. Open the 'Today's Brief' artifact. Act on tasks/outreach inline (those actions get mined overnight by `/listen`), fill in Today's reflection at the bottom of the brief, then run `/process-brief` for anything you want drafted now. Markdown twin at `<config-root>/briefs/<today_local>.md`. <N> items filtered by surfacing-prefs."
 
-If Step 3.0 found no write tool, append one sentence: "Note: brief auto-sync is unavailable (no filesystem MCP server connected) — click 🔄 Sync for end-day in the artifact before closing your day, or run `/setup-brief` to enable auto-sync."
+If Step 3.0 found no write tool, append one sentence: "Note: brief auto-sync is unavailable (no filesystem MCP server connected). Click 🔄 Sync brief state in the artifact before you close out today, or run `/setup-brief` to enable auto-sync."
 
 Don't dump the brief content into chat.
 

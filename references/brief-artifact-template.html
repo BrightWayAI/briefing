@@ -9,7 +9,7 @@
 </script>
 <!--
   =====================================================================
-  TODAY'S BRIEF — CANONICAL TEMPLATE (daily-brief v0.6.1, spec v2 layout)
+  TODAY'S BRIEF — CANONICAL TEMPLATE (briefing v0.11.0, spec v2 layout)
   Reusable, date-agnostic layout for the persistent `todays-brief` Cowork artifact.
   Reference spec: End-Day Routine Improvement Spec (Part A) + Daily-Brief Improvement Spec 2026-07-02 (D1-D4).
 
@@ -31,6 +31,8 @@
      and NO example prose in the generated artifact — strip any unused repeated block.
    - Set LS_KEY via {{DATE_ISO}} → brief-YYYY-MM-DD (must rotate with the date).
    - Repeat the .cal-item / .task-row / .outreach-row blocks per item (data-id unique).
+   - {{EVENT_ID}} = a stable per-event id (e.g. calendar event id) — drives the calendar
+     note textarea's annotation key "event-<id>". Must be unique per event on the day.
    - Feed the timeline via {{TL_BLOCKS_JSON}} — array of {s,e,label,cls} in DECIMAL hours,
      cls ∈ meeting|focus|personal. Set {{TL_START_HOUR}}/{{TL_END_HOUR}} (default 8/18).
    - Priority tag class: "" for P0, " p1" for P1, " p2" for P2. P2 rows are legitimate when
@@ -52,17 +54,18 @@
      (the Cowork bridge routes to an MCP server whose cwd is not the config root —
      relative paths are meaningless here).
 
-  localStorage contract (canonical schema_version 0.6.0 — read by /process-brief and
-  /end-day Step 2c). D2: state is ALSO mirrored to {{STATE_MIRROR_PATH}} on every action
-  (mirrorState() in save()) so /end-day can read brief state even though Cowork exposes
+  localStorage contract (canonical schema_version 0.7.0 — read by /process-brief and
+  /listen Step 1.5). D2: state is ALSO mirrored to {{STATE_MIRROR_PATH}} on every action
+  (mirrorState() in save()) so /listen can read brief state even though Cowork exposes
   no widget-context handle for persisted artifacts. The mirror only works through a
   writable MCP tool declared in this artifact's mcp_tools allowlist ({{FS_WRITE_TOOL}});
   when none resolved, a persistent banner steers the user to the manual Sync button:
     {
-      "schema_version": "0.6.0",
-      "tasks":            { "<task-id>":    { "action":"done|delegate|skip|not_important", "detail":"", "priority":"P0|P1|P2", "reprioritized":true, "ts":"", "name":"" } },
-      "annotations":      { "<item-id>":    "free text" },
-      "outreach_actions": { "<contact-id>": { "name":"", "action":"sent|nudge|skip|let_go|booked|dead", "bucket":"", "signal":"", "value_add":"", "detail":"", "ts":"" } },
+      "schema_version": "0.7.0",
+      "tasks":            { "<task-id>":    { "action":"done|delegate|skip|not_important", "detail":"", "return_on":"YYYY-MM-DD (skip only)", "priority":"P0|P1|P2", "reprioritized":true, "ts":"", "name":"" } },
+      "annotations":      { "<item-id>":    "free text" },        // includes "event-<id>" calendar notes
+      "outreach_actions": { "<contact-id>": { "name":"", "action":"sent|nudge|skip|let_go|booked|dead", "bucket":"", "signal":"", "value_add":"", "detail":"", "return_on":"YYYY-MM-DD (skip only)", "ts":"" } },
+      "reflection":       { "biggest":"", "blocked":"", "one_thing":"", "ts":"" },
       "tasks_checked":    { "<task-id>": true },   // back-compat mirror of done actions (v0.4.x readers)
       "last_interaction_at": "ISO8601"
     }
@@ -71,9 +74,13 @@
   its action (D3). An entry may have `reprioritized` with no `action` (priority changed,
   no disposition yet) — readers must tolerate a missing `action`.
   The UI emits outreach actions sent|nudge|skip|let_go. `booked`/`dead` are reader-accepted
-  synonyms (/end-day + /process-brief treat dead = let_go) but not rendered by default.
-  Outreach `detail` is reader-OPTIONAL: the v2 UI has no outreach detail prompt, so it's
-  unpopulated here. Readers that defer on `skip` use a default (e.g. 3d) when detail is absent.
+  synonyms (/listen + /process-brief treat dead = let_go) but not rendered by default.
+  Outreach `skip` now opens the same inline mini-form tasks use (duration -> computed
+  return_on, see skipDuration() below) — `detail` is populated on both kinds.
+  New in 0.7.0: outreach rows carry an annotation textarea (same annotations map, keyed
+  by the outreach id), calendar events carry a per-meeting note textarea (id "event-<id>"),
+  and the reflection card's lower half ("Today's reflection") is editable + autosaves to
+  state.reflection. 0.4.x-0.6.0 blobs still read fine — missing fields are treated as absent.
 
   Keep the artifact id STABLE as `todays-brief` on every update_artifact call. The skill
   owns the target_date + schema_version metadata + race guard (see brief.md Step 3).
@@ -153,6 +160,13 @@
   .row-sub.struck { color: #d1d5db; }
   textarea.annotation { width: 100%; min-height: 42px; margin-top: 8px; padding: 7px 9px; border: 1px solid #e5e7eb; border-radius: 6px; font-family: inherit; font-size: 12px; resize: vertical; background: #fdfdfc; display: none; }
   textarea.annotation:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px #dbeafe; }
+  textarea.cal-note { display: block; min-height: 32px; }
+  textarea.reflect-input { width: 100%; min-height: 36px; margin-top: 4px; padding: 6px 8px; border: 1px solid #e5e7eb; border-radius: 6px; font-family: inherit; font-size: 12px; resize: vertical; background: #fff; }
+  textarea.reflect-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px #dbeafe; }
+  .reflect-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+  .chip { border: 1px solid #d1fae5; background: #ecfdf5; color: #065f46; border-radius: 12px; padding: 3px 9px; font-size: 10px; cursor: pointer; }
+  .chip:hover { background: #d1fae5; }
+  .reflect-save { font-size: 10px; color: #9ca3af; margin-top: 3px; }
   .cat { display:flex; gap:6px; flex-wrap:wrap; margin-top:7px; }
   .cat select { font-size:11px; border:1px solid #e5e7eb; border-radius:6px; padding:3px 6px; background:#fff; color:#374151; }
   .cat label { font-size:10px; color:#9ca3af; align-self:center; }
@@ -205,10 +219,12 @@
       <!-- repeat .cal-item per event; omit .cal-notes if no notes -->
       <div class="cal-item">
         <div class="cal-time">{{EVENT_TIME}}</div>
-        <div>
+        <div style="flex:1;">
           <div class="cal-title">{{EVENT_TITLE}}</div>
           <div class="cal-who">{{EVENT_WHO}}</div>
           <div class="cal-notes">{{EVENT_NOTES}}</div>
+          <textarea class="annotation cal-note" data-item-id="event-{{EVENT_ID}}" name="event-{{EVENT_ID}}"
+                    placeholder="Note for this meeting..." oninput="saveAnnotation('event-{{EVENT_ID}}', this.value)"></textarea>
         </div>
       </div>
     </div>
@@ -241,7 +257,8 @@
       </div>
       <div class="mini-form">
         <input type="text" placeholder="Delegate to whom? (e.g. Erica)">
-        <select><option>1d</option><option selected>3d</option><option>next week</option></select>
+        <select><option>1d</option><option selected>3d</option><option>next week</option><option>2 weeks</option><option>1 month</option><option>pick a date</option></select>
+        <input type="date" class="mini-date" style="display:none;">
         <button class="btn" onclick="miniOk(this)">OK</button>
         <button class="btn" onclick="miniCancel(this)">Cancel</button>
       </div>
@@ -273,8 +290,9 @@
       <div class="actions">
         <button class="btn sent" onclick="outreachAction(this,'sent')">✓ Sent</button>
         <button class="btn nudge" onclick="outreachAction(this,'nudge')">Nudge</button>
-        <button class="btn skipo" onclick="outreachAction(this,'skip')">Skip</button>
+        <button class="btn skipo" onclick="showOutreachSkip(this)">Skip</button>
         <button class="btn letgo" onclick="outreachAction(this,'let_go')">Let go</button>
+        <button class="btn annotate" onclick="toggleAnnotation(this)">📝 Annotate</button>
       </div>
       <div class="cat">
         <label>bucket</label>
@@ -284,6 +302,14 @@
         <label>value-add</label>
         <select class="oc-value"><option>domain observation</option><option>article/framework</option><option>intro</option><option>diagnostic/free sample</option><option>case study/result</option></select>
       </div>
+      <div class="mini-form outreach-skip-form">
+        <select><option>1d</option><option selected>3d</option><option>next week</option><option>2 weeks</option><option>1 month</option><option>pick a date</option></select>
+        <input type="date" class="mini-date" style="display:none;">
+        <button class="btn" onclick="outreachSkipOk(this)">OK</button>
+        <button class="btn" onclick="miniCancel(this)">Cancel</button>
+      </div>
+      <textarea class="annotation" data-item-id="{{CONTACT_ID}}" name="{{CONTACT_ID}}"
+                placeholder="Note on this contact..." oninput="saveAnnotation('{{CONTACT_ID}}', this.value)"></textarea>
       <div class="status"></div>
     </div>
 
@@ -292,7 +318,7 @@
   </div>
 </div>
 
-<!-- 5. YESTERDAY'S REFLECTION (always render; read-only) -->
+<!-- 5. REFLECTION (always render) -->
 <div class="card" data-section="reflection">
   <div class="card-header gray">🪞 Yesterday's Reflection ({{YESTERDAY_LABEL}})</div>
   <div class="card-body">
@@ -302,11 +328,31 @@
   </div>
 </div>
 
+<div class="card" data-section="reflection-today">
+  <div class="card-header gray">✍️ Today's Reflection</div>
+  <div class="card-body">
+    <div class="reflect-item">
+      <div class="reflect-q">Biggest thing done</div>
+      <div class="reflect-chips" id="done-chips"></div>
+      <textarea class="reflect-input" id="reflect-biggest" placeholder="What got done today..." oninput="saveReflection()"></textarea>
+    </div>
+    <div class="reflect-item">
+      <div class="reflect-q">What blocked you</div>
+      <textarea class="reflect-input" id="reflect-blocked" placeholder="Optional..." oninput="saveReflection()"></textarea>
+    </div>
+    <div class="reflect-item">
+      <div class="reflect-q">The one thing tomorrow has to move</div>
+      <textarea class="reflect-input" id="reflect-one-thing" placeholder="What has to move..." oninput="saveReflection()"></textarea>
+    </div>
+    <div class="reflect-save" id="reflect-save-status"></div>
+  </div>
+</div>
+
 <!-- D2(a): manual sync fallback. Auto-mirror runs on every action when FS_WRITE_TOOL is
      set; when it's empty or calls fail, the status line becomes a persistent banner
-     steering the user here before close (/end-day accepts the pasted blob). -->
+     steering the user here before /listen mines it. -->
 <div class="sync-wrap">
-  <button class="btn" onclick="manualSync()">🔄 Sync for end-day</button>
+  <button class="btn" onclick="manualSync()">🔄 Sync brief state</button>
   <div class="sync-status" id="sync-status"></div>
   <textarea id="sync-blob" readonly></textarea>
 </div>
@@ -326,12 +372,28 @@ const TL_START = {{TL_START_HOUR}}, TL_END = {{TL_END_HOUR}};
 const BLOCKS = {{TL_BLOCKS_JSON}}; // e.g. [{s:9.5,e:10,label:'Automation chat',cls:'meeting'}]
 
 function load(){ try { return JSON.parse(localStorage.getItem(LS_KEY)||'{}'); } catch(e){ return {}; } }
-function save(s){ s.last_interaction_at = new Date().toISOString(); s.schema_version = '0.6.0'; localStorage.setItem(LS_KEY, JSON.stringify(s)); mirrorState(s); }
+function save(s){ s.last_interaction_at = new Date().toISOString(); s.schema_version = '0.7.0'; localStorage.setItem(LS_KEY, JSON.stringify(s)); mirrorState(s); }
 let state = load();
 state.tasks = state.tasks || {};
 state.annotations = state.annotations || {};
 state.outreach_actions = state.outreach_actions || {};
 state.tasks_checked = state.tasks_checked || {};
+state.reflection = state.reflection || {biggest:'',blocked:'',one_thing:'',ts:''};
+
+// Compute an absolute return_on date from a skip duration. 1d/3d land on a weekday
+// (Mon-Fri); the longer options don't need that adjustment.
+function isWeekend(d){ const w=d.getDay(); return w===0||w===6; }
+function skipDuration(detail, pickedDate){
+  if (detail === 'pick a date' && pickedDate) return pickedDate;
+  const d = new Date();
+  if (detail === '1d') { d.setDate(d.getDate()+1); while(isWeekend(d)) d.setDate(d.getDate()+1); }
+  else if (detail === '3d') { d.setDate(d.getDate()+3); while(isWeekend(d)) d.setDate(d.getDate()+1); }
+  else if (detail === 'next week') { d.setDate(d.getDate()+7); }
+  else if (detail === '2 weeks') { d.setDate(d.getDate()+14); }
+  else if (detail === '1 month') { d.setMonth(d.getMonth()+1); }
+  else { d.setDate(d.getDate()+3); }
+  return d.toISOString().slice(0,10);
+}
 
 // D2(a) — mirror the full state blob to a readable file so /end-day can consume it.
 // Cowork exposes no widget-context handle for persisted artifacts, so localStorage alone
@@ -350,7 +412,7 @@ async function mirrorState(s){
     setSync('Synced for end-day · ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}));
   } catch(e) { syncDegraded(); }
 }
-function syncDegraded(){ setSync('⚠️ Auto-sync unavailable — click "🔄 Sync for end-day" before you close, then paste the blob when /end-day asks.'); }
+function syncDegraded(){ setSync('⚠️ Auto-sync unavailable. Click "🔄 Sync brief state" before you close, then paste the blob if asked.'); }
 function setSync(msg){ const el=document.getElementById('sync-status'); if(el) el.textContent=msg; }
 // Surface the degraded state on load, not just after the first lost action.
 if (!FS_WRITE_TOOL || !window.cowork || typeof window.cowork.callMcpTool !== 'function') syncDegraded();
@@ -358,8 +420,8 @@ function manualSync(){
   const ta=document.getElementById('sync-blob');
   ta.value = JSON.stringify(state, null, 2);
   ta.style.display='block'; ta.focus(); ta.select();
-  try { document.execCommand('copy'); setSync('Copied. Paste into end-day if it asks: briefs/'+DATE_ISO+'.state.json'); }
-  catch(e){ setSync('Select all + copy this, then paste into end-day: briefs/'+DATE_ISO+'.state.json'); }
+  try { document.execCommand('copy'); setSync('Copied. Paste if asked: briefs/'+DATE_ISO+'.state.json'); }
+  catch(e){ setSync('Select all + copy this, then paste if asked: briefs/'+DATE_ISO+'.state.json'); }
 }
 
 (function buildTimeline(){
@@ -421,24 +483,35 @@ function taskAction(btn,action){
 function showMini(row,action){
   const mf=row.querySelector('.mini-form'); if(!mf) return;
   mf.style.display='flex'; mf.dataset.action=action;
-  const inp=mf.querySelector('input'), sel=mf.querySelector('select');
+  const inp=mf.querySelector('input[type=text]'), sel=mf.querySelector('select'), dt=mf.querySelector('.mini-date');
   inp.style.display=(action==='delegate')?'block':'none';
   sel.style.display=(action==='skip')?'block':'none';
+  dt.style.display='none';
   if(action==='delegate') inp.focus();
+  if(action==='skip') sel.onchange=()=>{ dt.style.display=(sel.value==='pick a date')?'inline-block':'none'; };
 }
 function miniOk(btn){
   const mf=btn.closest('.mini-form'), row=btn.closest('.task-row'), action=mf.dataset.action;
-  const detail=(action==='delegate')?mf.querySelector('input').value.trim():mf.querySelector('select').value;
-  if(action==='delegate'&&!detail){ mf.querySelector('input').focus(); return; }
+  if(action==='delegate'){
+    const detail=mf.querySelector('input[type=text]').value.trim();
+    if(!detail){ mf.querySelector('input[type=text]').focus(); return; }
+    mf.style.display='none'; commitTask(row,action,detail,null); return;
+  }
+  const sel=mf.querySelector('select'), detail=sel.value, dt=mf.querySelector('.mini-date');
+  const picked=(detail==='pick a date')?dt.value:null;
+  if(detail==='pick a date'&&!picked){ dt.focus(); return; }
+  const return_on=skipDuration(detail,picked);
   mf.style.display='none';
-  commitTask(row,action,detail);
+  commitTask(row,action,detail,return_on);
 }
 function miniCancel(btn){ btn.closest('.mini-form').style.display='none'; }
-function commitTask(row,action,detail){
+function commitTask(row,action,detail,return_on){
   const id=row.dataset.id, prev=state.tasks[id]||{};
   state.tasks[id]={...prev,action,detail,ts:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),name:row.dataset.name};
+  if(return_on) state.tasks[id].return_on=return_on; else delete state.tasks[id].return_on;
   state.tasks_checked[id]=(action==='done'); // back-compat mirror
   save(state); applyTask(row); renderTaskLog(); updateProgress();
+  if(typeof renderDoneChips==='function') renderDoneChips();
 }
 // D3 — re-prioritize in place; merges into tasks[id] without clobbering any action.
 function reprioritize(sel){
@@ -465,16 +538,36 @@ function renderTaskLog(){
   }).join(' &nbsp;·&nbsp; '):'<span style="color:#9ca3af;font-style:italic;">no actions yet</span>';
 }
 function applyOutreach(row){
-  const o=state.outreach_actions[row.dataset.id]; if(!o) return;
+  const ta=row.querySelector('textarea.annotation'), id=row.dataset.id;
+  if(ta && state.annotations[id]){ ta.value=state.annotations[id]; ta.style.display='block'; }
+  const o=state.outreach_actions[id]; if(!o) return;
   ['bucket','signal','value_add'].forEach(k=>{ const sel=row.querySelector('.oc-'+(k==='value_add'?'value':k)); if(sel&&o[k]) sel.value=o[k]; });
   row.querySelectorAll('.actions .btn').forEach(b=>{ b.style.opacity='.4'; b.disabled=true; });
   const st=row.querySelector('.status'); st.style.display='block'; st.style.color=O_COLOR[o.action]||'#374151';
-  st.textContent='✓ '+o.action+' · '+o.bucket+(o.signal&&o.signal!=='—'?' · '+o.signal:'')+' · '+o.value_add+' · '+o.ts;
+  st.textContent='✓ '+o.action+' · '+o.bucket+(o.signal&&o.signal!=='—'?' · '+o.signal:'')+' · '+o.value_add+(o.detail?' · '+o.detail:'')+' · '+o.ts;
 }
 function outreachAction(btn,action){
   const row=btn.closest('.outreach-row'),id=row.dataset.id;
   const bucket=row.querySelector('.oc-bucket').value,signal=row.querySelector('.oc-signal').value,value_add=row.querySelector('.oc-value').value;
   state.outreach_actions[id]={name:row.dataset.name,action,bucket,signal,value_add,ts:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})};
+  save(state); applyOutreach(row); renderOutreachLog();
+}
+function showOutreachSkip(btn){
+  const row=btn.closest('.outreach-row'), mf=row.querySelector('.outreach-skip-form'); if(!mf) return;
+  mf.style.display='flex';
+  const sel=mf.querySelector('select'), dt=mf.querySelector('.mini-date');
+  dt.style.display='none';
+  sel.onchange=()=>{ dt.style.display=(sel.value==='pick a date')?'inline-block':'none'; };
+}
+function outreachSkipOk(btn){
+  const mf=btn.closest('.outreach-skip-form'), row=btn.closest('.outreach-row'), id=row.dataset.id;
+  const sel=mf.querySelector('select'), detail=sel.value, dt=mf.querySelector('.mini-date');
+  const picked=(detail==='pick a date')?dt.value:null;
+  if(detail==='pick a date'&&!picked){ dt.focus(); return; }
+  const return_on=skipDuration(detail,picked);
+  const bucket=row.querySelector('.oc-bucket').value,signal=row.querySelector('.oc-signal').value,value_add=row.querySelector('.oc-value').value;
+  mf.style.display='none';
+  state.outreach_actions[id]={name:row.dataset.name,action:'skip',bucket,signal,value_add,detail,return_on,ts:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})};
   save(state); applyOutreach(row); renderOutreachLog();
 }
 function renderOutreachLog(){
@@ -485,6 +578,39 @@ function renderOutreachLog(){
 document.querySelectorAll('.task-row').forEach(applyTask);
 document.querySelectorAll('.outreach-row').forEach(applyOutreach);
 renderTaskLog(); renderOutreachLog(); updateProgress();
+
+// Today's reflection — editable, autosaves to state.reflection.
+function loadReflection(){
+  const r=state.reflection||{};
+  document.getElementById('reflect-biggest').value=r.biggest||'';
+  document.getElementById('reflect-blocked').value=r.blocked||'';
+  document.getElementById('reflect-one-thing').value=r.one_thing||'';
+}
+function saveReflection(){
+  state.reflection={
+    biggest: document.getElementById('reflect-biggest').value,
+    blocked: document.getElementById('reflect-blocked').value,
+    one_thing: document.getElementById('reflect-one-thing').value,
+    ts: new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})
+  };
+  save(state);
+  const st=document.getElementById('reflect-save-status'); if(st) st.textContent='Saved · '+state.reflection.ts;
+}
+function renderDoneChips(){
+  const wrap=document.getElementById('done-chips'); if(!wrap) return;
+  const doneNames=Object.values(state.tasks).filter(t=>t.action==='done').map(t=>t.name).filter(Boolean);
+  wrap.innerHTML='';
+  doneNames.forEach(name=>{
+    const chip=document.createElement('span'); chip.className='chip'; chip.textContent='+ '+name;
+    chip.onclick=()=>{
+      const ta=document.getElementById('reflect-biggest');
+      ta.value=ta.value?(ta.value+'; '+name):name;
+      saveReflection();
+    };
+    wrap.appendChild(chip);
+  });
+}
+loadReflection(); renderDoneChips();
 </script>
 </body>
 </html>

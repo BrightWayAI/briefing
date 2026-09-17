@@ -4,6 +4,21 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.11.0] — Full round-trip: brief state stops depending on /end-day (2026-09-17)
+
+### Added
+- Hosted claude.ai artifact-capabilities discovery path in `/brief` Step 3.0 — desktop Cowork's filesystem-MCP mirror can't reach a browser-tab hosted artifact, so the render step now loads the artifact-capabilities skill to find whatever shared-state capability exists at render time, and degrades explicitly (manual-sync banner) when none does.
+- A shared preflight step in `/brief`, `/process-brief`, `/end-day`, and `/listen` (cortex) that reads a discovered hosted shared-state store back and writes it to `briefs/<date>.state.json` before anything else runs. No-op on desktop Cowork.
+- Outreach rows gain an annotation textarea (`annotations["outreach-<id>"]`) and a Skip duration mini-form (1d/3d/next week/2 weeks/1 month/pick a date → computed `return_on`, weekday-adjusted for 1d/3d) — Skip no longer commits immediately with no detail.
+- Calendar events gain a per-meeting note textarea (`annotations["event-<id>"]`).
+- The reflection card splits into read-only "Yesterday's Reflection" and an editable "Today's Reflection" (three autosaving fields, plus tappable chips built from today's done tasks that insert their title).
+- `/brief` Step 0D0 reads yesterday's `closures.json` and the new `briefs/.snooze-ledger.json` before every render — closed/suppressed items disappear, snoozed items hide until `return_on`, and returning items render tagged "back from snooze" even if the live source forgot about them. When `relationships/today.json` is missing, the outreach queue now falls back to snooze-ledger returns + unclosed carryover + person/bizdev open loops instead of requiring hand-carried state.
+
+### Changed
+- localStorage schema bumped to `0.7.0` (additive-only — 0.4.x–0.6.0 blobs still read fine). Adds `tasks[id].return_on`, `outreach_actions[id].return_on`, and `reflection: {biggest, blocked, one_thing, ts}`.
+- The manual sync button is renamed "🔄 Sync brief state" (was "Sync for end-day") — it's read by `/process-brief`, `/end-day`, and `/listen` now, not just `/end-day`.
+- All "run `/end-day` to capture a reflection" strings replaced with "fill in Today's reflection at the bottom of the brief" — `/end-day` is optional; the artifact and cortex `/listen` + `/morning` are the primary path.
+
 ## [0.10.2] — OpenAI host adapter (2026-09-14)
 
 ### Added

@@ -1,5 +1,5 @@
 ---
-description: Act on the actions + annotations the user wrote into today's brief artifact. Reads the artifact via Cowork's read_widget_context (canonical v0.5.0 JSON-blob shape — tasks/annotations/outreach_actions), routes each annotation to the right downstream skill (draft reply → growth /draft-touchpoint, move task → CRM), and stages task actions (done→COMPLETED, delegate→delegatee task, skip→defer) and outreach actions (sent/nudge/booked/let_go) to CRM and person/bizdev nodes. Intra-day actor; durable memory write-backs + suppression learning happen in /end-day Step 2c. Never sends anything; drafts only.
+description: Act on the actions + annotations the user wrote into today's brief artifact. Reads the artifact via the state-mirror file (canonical v0.7.0 JSON-blob shape — tasks/annotations/outreach_actions/reflection), routes each annotation to the right downstream skill (draft reply → growth /draft-touchpoint, move task → CRM), and stages task actions (done→COMPLETED, delegate→delegatee task, skip→defer) and outreach actions (sent/nudge/booked/let_go) to CRM and person/bizdev nodes. Intra-day actor; durable memory write-backs + suppression learning happen overnight in cortex /listen Step 1.5 (or in /end-day Step 2c when the user still runs it). Never sends anything; drafts only.
 ---
 
 # /process-brief
@@ -30,34 +30,37 @@ Read `<config-root>/briefs/<today_local>.md`.
 
 ---
 
-## Step 1 — Read the artifact's current state (v0.6.0 — canonical localStorage shape)
+## Step 1 — Read the artifact's current state (v0.7.0 — canonical localStorage shape)
 
-Read the brief state through this fallback chain, stopping at the first source that yields a blob:
-1. **State-mirror file (primary, v0.6.0):** `<config-root>/briefs/<today_local>.state.json` — the artifact auto-mirrors its full localStorage blob here on every action **when a filesystem MCP tool was resolved at render time** (v0.6.1 Step 3.0; see `/setup-brief` § Enable brief auto-sync). This works even in Claude Code.
+**Preflight (v0.7.0):** if the brief was rendered as a hosted claude.ai artifact and `/brief` Step 3.0 discovered a shared-state capability via the artifact-capabilities skill, read that store back first and write it to `<config-root>/briefs/<today_local>.state.json` before continuing — this is a no-op on desktop Cowork (the mirror already wrote the file directly) or when no capability was ever discovered.
+
+Then read the brief state through this fallback chain, stopping at the first source that yields a blob:
+1. **State-mirror file (primary):** `<config-root>/briefs/<today_local>.state.json` — the artifact auto-mirrors its full localStorage blob here on every action **when a filesystem MCP tool was resolved at render time** (desktop), or via the preflight above (hosted). This works even in Claude Code.
 2. **Widget context (legacy):** `mcp__cowork__read_widget_context(artifact_id="todays-brief")` for the entry at key `brief-<today_local>`.
-3. **Paste path:** ask the user to click **🔄 Sync for end-day** in the brief and paste the copied blob. Validate it parses as a JSON object, write it verbatim to `<config-root>/briefs/<today_local>.state.json` (so `/end-day` benefits too), and proceed as if source 1 succeeded.
+3. **Paste path:** ask the user to click **🔄 Sync brief state** in the brief and paste the copied blob. Validate it parses as a JSON object, write it verbatim to `<config-root>/briefs/<today_local>.state.json` (so `/listen` benefits too), and proceed as if source 1 succeeded.
 
-If the user declines the paste and no source yielded state: stop with — "`/process-brief` found no brief state. If you acted in the artifact, click **Sync for end-day** in the brief, or edit `<config-root>/briefs/<today_local>.md` directly."
+If the user declines the paste and no source yielded state: stop with — "`/process-brief` found no brief state. If you acted in the artifact, click **Sync brief state** in the brief, or edit `<config-root>/briefs/<today_local>.md` directly."
 
-### Reading the JSON-blob state (canonical v0.6.0 shape)
+### Reading the JSON-blob state (canonical v0.7.0 shape)
 
 Parse the blob (per `briefing/commands/brief.md` localStorage contract):
 
 ```javascript
 const state = JSON.parse(mirrorFile || widget_context["brief-<today_local>"] || "{}");
 
-const tasks       = state.tasks || {};            // {task_id: {action: done|delegate|skip|not_important, detail, priority, reprioritized, ts, name}}
-const annotations = state.annotations || {};      // {item_id: free-form-text}
-const outreach    = state.outreach_actions || {}; // {contact_id: {name, action: sent|skip|nudge|let_go|booked|dead, bucket, signal, value_add, detail, ts}}
+const tasks       = state.tasks || {};            // {task_id: {action: done|delegate|skip|not_important, detail, return_on, priority, reprioritized, ts, name}}
+const annotations = state.annotations || {};      // {item_id: free-form-text} — task/inbox/outreach/event ids all share this map
+const outreach    = state.outreach_actions || {}; // {contact_id: {name, action: sent|skip|nudge|let_go|booked|dead, bucket, signal, value_add, detail, return_on, ts}}
+const reflection  = state.reflection || {};        // {biggest, blocked, one_thing, ts} — not acted on here; /listen Step 1.5g owns it
 const schemaVersion = state.schema_version || "0.4.0";
 ```
 
-**Back-compat:** if you see `state.tasks_checked` (a `{id: bool}` map from v0.4.x) but no `state.tasks`, treat each `true` as `{action: "done"}`. A `tasks` entry may carry `reprioritized: true` + `priority` with **no `action`** (v0.6.0 priority-only change) — tolerate the missing `action`. If `schema_version` is newer than `0.6.0`, surface a one-line warning and proceed with the fields you recognize.
+**Back-compat:** if you see `state.tasks_checked` (a `{id: bool}` map from v0.4.x) but no `state.tasks`, treat each `true` as `{action: "done"}`. A `tasks` entry may carry `reprioritized: true` + `priority` with **no `action`** (v0.6.0 priority-only change) — tolerate the missing `action`. 0.4.x–0.6.0 blobs are missing `reflection`/`return_on` — treat both as absent. If `schema_version` is newer than `0.7.0`, surface a one-line warning and proceed with the fields you recognize.
 
 ### Three streams feed Step 2/3
 
 - **`annotations`** — free-form user input per item. Routed by Step 2 patterns (draft_reply / reschedule_task / dismiss / draft_outreach / clarify).
-- **`tasks`** — per-task action objects, NOT annotations. Routed per Step 3.6 (done → CRM COMPLETED; delegate → CRM task for delegatee; skip → defer due date; not_important → log for `/end-day` suppression).
+- **`tasks`** — per-task action objects, NOT annotations. Routed per Step 3.6 (done → CRM COMPLETED; delegate → CRM task for delegatee; skip → defer due date; not_important → log for overnight suppression).
 - **`outreach_actions`** — per-contact action objects with categories. Routed per Step 3.7 (sent/nudge → draft touchpoint; booked → prep task; let_go/dead → log).
 
 Behavior matrix (task action + annotation are independent signals on the same row):
@@ -65,7 +68,7 @@ Behavior matrix (task action + annotation are independent signals on the same ro
 - Task `done` with annotation → both fire: annotation routes per Step 2, action routes per Step 3.6.
 - No task action but annotation present → annotation routes; the task isn't acted on.
 
-**Division of labor with `/end-day`:** `/process-brief` is the intra-day actor — it stages reversible side-effects on demand (Gmail drafts, CRM date/status updates, touchpoint drafts) so you can process mid-day. The **memory write-backs and suppression learning** (writing `not_important` items into `surfacing-prefs.md`, logging touches onto person/bizdev nodes, incrementing skip counters) happen in `/end-day` Step 2c, which reads the same blob. `/process-brief` is idempotent and safe to run repeatedly; `/end-day` mines the final end-of-day state.
+**Division of labor with `/listen`:** `/process-brief` is the intra-day actor — it stages reversible side-effects on demand (Gmail drafts, CRM date/status updates, touchpoint drafts) so you can process mid-day. The **memory write-backs and suppression learning** (writing `not_important` items into `surfacing-prefs.md`, logging touches onto person/bizdev nodes, incrementing skip counters, writing the snooze ledger, carrying the reflection into tomorrow's twin) happen overnight in cortex `/listen` Step 1.5, which reads the same blob and stages proposals for `/morning`. `/process-brief` is idempotent and safe to run repeatedly; `/end-day` (optional) does the same durable write-backs synchronously if the user runs it instead of waiting for `/listen`.
 
 ---
 
@@ -132,9 +135,9 @@ Walk `state.tasks`. Route by `action`:
 
 **`delegate`** (`detail` = delegatee, default Erica) — queue: reassign the source task's owner to the delegatee if the CRM supports it, OR create a new CRM task for the delegatee mirroring the original, due `today_local`. Note the delegation in the run summary.
 
-**`skip`** (`detail` = snooze duration, e.g. `3d`) — queue a due-date push on the source task by the parsed duration (same path as `reschedule_task`). This is the intra-day version; `/end-day` separately increments the per-task skip counter for the repeat-ignore rule.
+**`skip`** (`detail` = snooze duration, `return_on` = the computed absolute date) — queue a due-date push on the source task to `return_on` (same path as `reschedule_task`). This is the intra-day version; `/listen` Step 1.5 separately writes the snooze ledger entry and increments the per-task skip counter for the repeat-ignore rule.
 
-**`not_important`** — do NOT write to CRM here. Log it for `/end-day` to fold into `surfacing-prefs.md`: append a line to `<config-root>/plugins/briefing.dismissed-log.md` as `<today> <ISO-time> task-<id> not_important: <title>`. (The authoritative suppression write happens in `/end-day` Step 2c.)
+**`not_important`** — do NOT write to CRM here. Log it for overnight processing: append a line to `<config-root>/plugins/briefing.dismissed-log.md` as `<today> <ISO-time> task-<id> not_important: <title>`. (The authoritative suppression write happens in `/listen` Step 1.5, or `/end-day` Step 2c if the user runs it instead.)
 
 Batch all CRM intents and present one confirmation table before writing:
 
@@ -147,7 +150,7 @@ From today's brief task actions:
 [Y]es to all · [N]o to all · [E]dit (toggle per row)
 ```
 
-On Y → batch CRM writes; report successes/failures. On N → no CRM writes (localStorage state persists; `/end-day` will still mine it). On E → per-row toggle, then batch.
+On Y → batch CRM writes; report successes/failures. On N → no CRM writes (localStorage state persists; `/listen` will still mine it overnight). On E → per-row toggle, then batch.
 
 If `growth` is installed and a `done`/`delegate` task is associated with a person in `memory/person/`, invoke `/touchpoint <person> --channel=task --summary="<action> via brief"` to log it. (Legacy fallback: `weekly-outreach` outreach state.)
 
@@ -161,9 +164,9 @@ Walk `state.outreach_actions`. Each entry carries `action` + optional `bucket` /
 - **`let_go` / `dead`** — log and remove the contact from the active queue.
 - **`skip`** — defer reappearance by `detail` duration; no node write.
 
-Batch these into the same confirmation flow as Step 3.6 (or a second table) so nothing writes without a single approval. The authoritative node write-backs are owned by `/end-day` Step 2c; in `/process-brief` these are the intra-day stages — keep them idempotent (don't double-log the same touch).
+Batch these into the same confirmation flow as Step 3.6 (or a second table) so nothing writes without a single approval. The authoritative node write-backs are owned by `/listen` Step 1.5 (or `/end-day` Step 2c, if run); in `/process-brief` these are the intra-day stages — keep them idempotent (don't double-log the same touch).
 
-This is the "interactive brief feeds /end-day" path: `/end-day` Step 2c reads the same `tasks` + `outreach_actions` dictionaries and does the durable memory write-backs + suppression learning without re-asking. The brief is a living working surface, not a morning snapshot.
+This is the "interactive brief feeds /listen" path: `/listen` Step 1.5 reads the same `tasks` + `outreach_actions` dictionaries and does the durable memory write-backs + suppression learning without re-asking. The brief is a living working surface, not a morning snapshot.
 
 ---
 
@@ -185,7 +188,7 @@ This is the audit trail. It's appended under `### Processed annotations` at the 
 
 Output one summary message to chat:
 
-> "Processed <N> annotations + <A> task actions + <O> outreach actions. <M> Gmail drafts, <K> CRM updates (completions/delegations/reschedules), <T> touchpoints logged, <D> dismissed. Review drafts before sending. End-of-day write-backs + suppression learning will run in `/end-day`."
+> "Processed <N> annotations + <A> task actions + <O> outreach actions. <M> Gmail drafts, <K> CRM updates (completions/delegations/reschedules), <T> touchpoints logged, <D> dismissed. Review drafts before sending. Durable write-backs + suppression learning run overnight via `/listen`."
 
 Don't dump the action details into chat — they're in the markdown twin and the artifact's action logs.
 
