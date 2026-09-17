@@ -1,6 +1,6 @@
 ---
 name: process-brief
-description: Read the actions + annotations the user logged into today's "Today's Brief" artifact (v0.5.0 blob — tasks/annotations/outreach_actions), classify each, and route it — draft reply via Gmail, move CRM task due date, dismiss; stage task actions (done→COMPLETED, delegate→delegatee task, skip→defer) and outreach actions (sent/nudge→touch, booked→prep task, let_go→close). Auto-fires on "/process-brief", "process my brief", "act on my annotations", "follow up on my brief". Intra-day actor; durable memory write-backs + suppression learning happen in cortex /end-day Step 2c. Drafts only — never sends.
+description: Read the actions + annotations the user logged into today's brief state (canonical v0.7.0 — tasks/annotations/outreach_actions/reflection), classify each, and route it — draft reply via Gmail, move CRM task due date, dismiss; stage task actions (done→COMPLETED, delegate→delegatee task, skip→defer) and outreach actions (sent/nudge→touch, booked→prep task, let_go→close). Auto-fires on "/process-brief", "process my brief", "act on my annotations", "follow up on my brief". Intra-day actor; durable memory write-backs + suppression learning happen overnight in cortex /listen Step 1.5, or synchronously in optional /end-day Step 2c. Drafts only — never sends.
 ---
 
 <!-- OPENAI-ADAPTER:START -->
@@ -29,7 +29,7 @@ See `commands/process-brief.md` for the full workflow.
 
 ## Inputs
 
-- Cowork artifact "Today's Brief" — v0.5.0 localStorage blob `tasks`/`annotations`/`outreach_actions` (via `mcp__cowork__read_widget_context`)
+- `<config-root>/briefs/<today>.state.json` — canonical v0.7.0 state (`tasks`/`annotations`/`outreach_actions`/`reflection`), populated by the artifact mirror, sync paste, or explicit ChatGPT/Codex actions in chat
 - `<config-root>/briefs/<today>.md` — the markdown twin to append action records to
 - `<config-root>/memory/me/voice.md` — for drafting replies in the user's voice
 - Gmail MCP, HubSpot MCP — for the side-effects (Gmail drafts, CRM task date/status updates, delegatee tasks)
@@ -54,11 +54,11 @@ See `commands/process-brief.md` for the full workflow.
 | "skip" / "dismiss" / "I'll handle this" | `dismiss` | log only |
 | Free-text / ambiguous | `clarify` | batched follow-up question in chat |
 
-**Task actions** (`state.tasks`, v0.5.0): `done` → CRM COMPLETED · `delegate` → delegatee CRM task · `skip` → defer due date · `not_important` → log for `/end-day` suppression.
+**Task actions** (`state.tasks`, v0.7.0): `done` → CRM COMPLETED · `delegate` → delegatee CRM task · `skip` → defer to `return_on` · `not_important` → log for `/listen` suppression learning.
 
-**Outreach actions** (`state.outreach_actions`, v0.5.0): `sent`/`nudge` → log touch (+ bucket/value-add/signal) · `booked` → advance stage + prep task · `let_go`/`dead` → log + remove from queue.
+**Outreach actions** (`state.outreach_actions`, v0.7.0): `sent`/`nudge` → log touch (+ bucket/value-add/signal) · `skip` → defer to `return_on` · `booked` → advance stage + prep task · `let_go`/`dead` → log + remove from queue.
 
-Durable memory write-backs + `surfacing-prefs.md` suppression learning are owned by `/end-day` Step 2c, not this command.
+Durable memory write-backs, `surfacing-prefs.md` learning, snooze-ledger updates, and reflection carry-forward are owned by cortex `/listen` Step 1.5 and reviewed in `/morning`. Optional `/end-day` applies the same explicit state synchronously and writes the processed marker so `/listen` does not duplicate it.
 
 ## Two-stage triage
 
@@ -66,7 +66,7 @@ Classifier (Haiku-class): one cheap pass over all annotations to assign normaliz
 
 ## Failure modes
 
-- No artifact found → "Run `/brief` first."
+- No artifact or Markdown twin found → "Run `/brief` first."
 - No annotations on the artifact → "Nothing to process. The brief is ready for annotation."
-- Cowork artifact tools not available (Claude Code) → stops with a Claude-Code-specific path: edit the markdown snapshot directly, invoke draft / update commands manually
+- Interactive artifact unavailable → read the local v0.7.0 state written from explicit chat actions; if neither it nor pasted state exists, explain how to record the action against a stable id instead of implying state was read
 - Reschedule date >14 days out → asks user to confirm inline before writing to CRM
