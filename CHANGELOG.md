@@ -4,6 +4,17 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.12.0] — Closures fallback derivation + artifact-runtime contract (2026-09-18)
+
+### Added
+- `/brief` Step 3.0 hosted path now writes `<config-root>/briefs/.artifact-runtime.json` on every publish (`artifact_url`, `capability`, `collection`, `doc_id_pattern`, `updated_at`) — the cross-plugin pointer cortex `/listen` Step 1.5a reads instead of re-discovering the shared-state capability itself.
+- The artifact-db preflight (read the hosted store back to `<date>.state.json`) moved from Step 3.0's own narrative into a new Step 0.A2, run before Step 0D0, so the closures/fallback pass always has the freshest data before render.
+- `/brief` Step 0D0 fallback: when yesterday's `.closures.json` is missing but `.state.json` (or a readable artifact-db doc) exists, derive closed/snoozed/carried/reflection directly from it and write `.closures.json` with `written_by: "/brief fallback"`. `/listen` treats this as authoritative and will not overwrite it.
+- The markdown twin footer now says "yesterday's brief state not found — nightly-listen may not be running; run ops `/status`" instead of silently rendering unfiltered content when neither closures nor state exists at all.
+
+### Fixed
+- Previously, a broken `nightly-listen` schedule meant `/brief` quietly rendered stale/unfiltered content with no signal to the user that anything was wrong.
+
 ## [0.11.0] — Full round-trip: brief state stops depending on /end-day (2026-09-17)
 
 ### Added

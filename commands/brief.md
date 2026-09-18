@@ -45,6 +45,23 @@ If `brief_enabled` is `false`, stop with: "Daily brief is disabled. Re-enable in
 
 Read `<config-root>/memory/me/identity.md` for time zone (defines "today") and tool inventory (decides which sections will have data).
 
+### A2 — Artifact-db preflight (v0.8.0 — moved ahead of D0)
+
+Before reading closures/snooze state, check whether a prior publish left
+`<config-root>/briefs/.artifact-runtime.json` (written by Step 3.0 on every hosted
+publish). If it names an artifact with `capability: "db"`, read document
+`briefs/<yesterday_local>` from that artifact's database (per the runtime file's
+`collection` and `doc_id_pattern`) and write it to
+`<config-root>/briefs/<yesterday_local>.state.json` before continuing — this is what
+gives Step D0's closures/fallback pass real data to read when yesterday's brief lived
+only in a hosted claude.ai artifact's browser tab. No-op if `.artifact-runtime.json`
+is absent, names no `db` capability, or the read fails (log the failure and continue
+with whatever `<yesterday_local>.state.json` already exists on disk — never block on
+this). This preflight is intentionally the same one Step 3.0 documents for the
+hosted-artifact case; it now runs here, in Step 0, ahead of D0, rather than being
+folded into Step 3.0's own narrative, so the closures pass always has the freshest
+data available before render instead of only when `/brief` happens to reach Step 3.
+
 ### D0 — Read closures + snooze ledger (v0.7.0 — REQUIRED before render)
 
 Before pulling any live source, read three files that describe what already happened to yesterday's brief:
@@ -53,7 +70,16 @@ Before pulling any live source, read three files that describe what already happ
 2. `<config-root>/briefs/.snooze-ledger.json` — the canonical snooze ledger (see `/listen` Step 1.5h). Entries keyed by brief item id: `{title, kind, node, return_on, skipped_on, skip_count, last_detail}`.
 3. If `<config-root>/relationships/today.json` is present, it still drives the outreach queue as today's live pull (Step 1). If it's **missing**, build the outreach queue from: snooze-ledger returns (kind=outreach) + unclosed outreach items from yesterday's brief + person/bizdev node open loops, and say so in the twin footer ("today.json not found. Outreach built from carryover + snooze returns").
 
-Any of these three files being absent is normal on a fresh install or the first day — proceed with empty sets, don't treat it as an error.
+**Fallback derivation (v0.8.0) — when `.closures.json` is missing but state exists.** If `<yesterday_local>.closures.json` is missing but `<yesterday_local>.state.json` exists on disk (written by the Step 0.A2 artifact-db preflight below, or mirrored directly by desktop Cowork), derive the closures pass directly from that state blob instead of proceeding with empty sets — this is what keeps the brief filtered even on a night `/listen` never ran:
+- `closed` = tasks with `action` in `done`/`not_important`; outreach with `action` in `sent`/`nudge`/`booked`/`let_go`.
+- `snoozed` = any task/outreach entry with `return_on > today_local`.
+- `carried` = annotation entries that read as containing an action (non-empty free text that isn't purely a "nothing to do" disposition — see `/listen` Step 1.5's carried-task semantics for the same judgment call); `reflection.one_thing` feeds Center of Gravity as usual (Step 1's Center of Gravity logic already reads yesterday's `## Reflection`, which this fallback does not need to duplicate).
+- `reflection` = `state.reflection` verbatim.
+Write `<yesterday_local>.closures.json` with this derived shape plus `"written_by": "/brief fallback"` so downstream readers (including `/listen`, which treats an existing closures.json as authoritative and will not overwrite it — see `/listen` Step 1.5e) know this record didn't come from the nightly pipeline. If the artifact-db doc for yesterday can be read instead of a local state.json, use that as the source for the same derivation.
+
+If neither `.closures.json` nor `<yesterday_local>.state.json` (nor a readable artifact-db doc) exists at all, proceed with empty sets as before, but the Step 2 markdown twin footer must say so explicitly (see Step 2) rather than silently rendering unfiltered content — this is the signal that `nightly-listen` may not be running.
+
+Any of these three files being absent is otherwise normal on a fresh install or the first day — proceed with empty sets, don't treat it as an error.
 
 ### D — Load surfacing preferences (v0.5.0 — REQUIRED filter)
 
@@ -155,6 +181,8 @@ Write the assembled content to `<config-root>/briefs/<today_local>.md`. The mark
 
 > Generated <ISO-8601 timestamp> · <N> items filtered by surfacing-prefs · Closed since yesterday: <list or "none"> · <N> snoozed · <N> returned
 
+If neither `<yesterday_local>.closures.json` nor `<yesterday_local>.state.json` (nor a readable artifact-db doc) exists at all — the "neither exists" case from Step 0D0 — replace the whole footer line with: "yesterday's brief state not found — nightly-listen may not be running; run ops `/status`." Do not render the normal filtered-counts footer in that case; a fabricated "0 filtered" reads as healthy when it isn't.
+
 ## 1. Center of Gravity
 
 <one or two sentences>
@@ -215,10 +243,14 @@ The artifact sandbox can only call MCP tools that are (a) fully qualified `mcp__
 
 **Hosted claude.ai path (v0.7.0):** if the render target is a hosted claude.ai artifact (not desktop Cowork), load the **artifact-capabilities skill** before assuming there is no bridge — it documents whatever shared-state capability is actually available at render time (this changes over time; don't hardcode an API surface here). Concretely:
 1. Load the artifact-capabilities skill and ask it what shared-state / persistent-storage capability, if any, this hosted artifact can call to write a blob outside its own browser tab.
-2. If it reports a usable capability → wire the rendered HTML's `mirrorState()` to call it (same shape as the desktop path: write the JSON blob, treat a thrown error / error response the same as `isError`), and record which capability so the preflight step below (used by `/brief`, `/process-brief`, `/end-day`, `/listen`) knows how to read it back.
+2. If it reports a usable capability → wire the rendered HTML's `mirrorState()` to call it (same shape as the desktop path: write the JSON blob, treat a thrown error / error response the same as `isError`), and **write (overwriting on every publish)** `<config-root>/briefs/.artifact-runtime.json`:
+   ```json
+   {"artifact_url": "<url>", "capability": "db", "collection": "briefs", "doc_id_pattern": "<date>", "updated_at": "<ISO-8601 now>"}
+   ```
+   This is the cross-plugin contract the Step 0.A2 preflight (this command), and cortex `/listen` Step 1.5a, read to know how to reach the doc store without re-discovering the capability every time.
 3. If it reports no usable capability → degrade explicitly: `{{FS_WRITE_TOOL}}` = `""`, and the rendered artifact shows the persistent manual-sync banner. Do not invent an API call that hasn't been confirmed to exist.
 
-**Preflight (all four commands, v0.7.0):** `/brief`, `/process-brief`, `/end-day`, and `/listen` each open with a preflight step that, when running against a hosted artifact with a discovered shared-state capability, reads that store back and writes it to `<config-root>/briefs/<today_local>.state.json` before doing anything else — this is what turns "state lives in a browser tab" into "state lives on disk where a headless command can see it." On desktop Cowork this preflight is a no-op (the mirror already wrote the file directly). When no capability was ever discovered, the preflight is also a no-op and the existing manual-sync-banner path is the only bridge.
+**Preflight (all four commands, v0.7.0; keyed off `.artifact-runtime.json` as of v0.8.0):** `/brief` (Step 0.A2, above), `/process-brief`, `/end-day`, and `/listen` (Step 1.5a) each open with a preflight step that reads `<config-root>/briefs/.artifact-runtime.json` and, when it names a hosted artifact with a discovered shared-state capability, reads that store back and writes it to `<config-root>/briefs/<date>.state.json` before doing anything else — this is what turns "state lives in a browser tab" into "state lives on disk where a headless command can see it." On desktop Cowork this preflight is a no-op (the mirror already wrote the file directly, and `.artifact-runtime.json` is never written on that path). When no capability was ever discovered, the preflight is also a no-op and the existing manual-sync-banner path is the only bridge.
 
 Load `references/brief-artifact-template.html` (v2 layout). Substitute these tokens with today's filtered data:
 
