@@ -4,6 +4,11 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.12.1] — Plugin-directory pre-submission fix (2026-10-15)
+
+### Fixed
+- Added the one-step `/plugin marketplace add` + `/plugin install briefing@nucleus` install block to `README.md`'s Install section (previously prose-only, no runnable command).
+
 ## [0.12.0] — Closures fallback derivation + artifact-runtime contract (2026-09-18)
 
 ### Added
