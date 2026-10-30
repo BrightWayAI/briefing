@@ -4,6 +4,12 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.12.3] — Cloud config-root portability (2026-10-30)
+
+### Fixed
+- Align OpenAI root resolution with Cortex, including materialized cloud roots and unreachable-root checks.
+- Specify cloud bootstrap/sync, private-repo boundaries, MCP-only degradation, and per-schedule verification.
+
 ## [0.12.2] — Config-root guard (2026-10-30)
 
 ### Changed
