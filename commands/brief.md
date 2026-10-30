@@ -23,6 +23,10 @@ Otherwise (no `--tomorrow` flag, no next-day-planning phrasing), continue with t
 
 ---
 
+## Step G — Config-root guard (run first)
+
+Run cortex's `python3 scripts/cortex_cli.py root-status`. If it exits non-zero, **stop** and show its sentence verbatim; write nothing anywhere else. If cortex is not installed, require that the resolved root is an existing directory containing `memory/`; otherwise stop with: "Your Nucleus files are on your Mac and this chat can't see them yet. In the Claude desktop app, use + → Add folder and pick ~/cortex-root, then send any message." (remote session) or point to `/start-nucleus` (local).
+
 ## Step 0 — Resolve plugin config root and load context
 
 ### A — Resolve `<config-root>`

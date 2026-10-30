@@ -4,6 +4,11 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.12.2] — Config-root guard (2026-10-30)
+
+### Changed
+- `/brief` and `/process-brief` start with a config-root guard: if the root is unreachable it stops with the plain-English fix instead of building a brief from nothing.
+
 ## [0.12.1] — Plugin-directory pre-submission fix (2026-10-15)
 
 ### Fixed
