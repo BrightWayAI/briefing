@@ -1,4 +1,4 @@
-# OpenAI portability contract — Today's Brief
+# OpenAI portability contract — Briefing
 
 This file binds the plugin's canonical Claude-oriented examples to ChatGPT and Codex.
 It changes tool names and unavailable-host behavior, not the workflow's business logic
@@ -66,7 +66,7 @@ root, tools, and synchronization; another chat's successful setup is not proof.
 
 ## Invocation
 
-- ChatGPT desktop: enable the plugin in a chat, then ask naturally or use `@Today's Brief <request>`.
+- ChatGPT desktop: enable the plugin in a chat, then ask naturally or use `@Briefing <request>`.
 - Codex: ask naturally or invoke the namespaced Agent Skill shown by the client.
 - Claude slash commands remain aliases in prose. `/example` means the matching skill
   workflow; it does not require an OpenAI slash-command feature.

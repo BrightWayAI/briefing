@@ -59,7 +59,7 @@ Query your calendar for the target day, working-hours window. Capture:
 
 The agent returns a ranked list. Use the top items as candidate task blocks.
 
-**If `growth:pipeline-analyst` is not available** (or this plugin's user-context says CRM is "none"): note "Growth Engine not installed; pipeline analysis skipped" and query the CRM directly for tasks owned by you (per `crm-owner-id` in user-context), status NOT_STARTED or IN_PROGRESS, due on/before the target day. Sort by priority then due date.
+**If `growth:pipeline-analyst` is not available** (or this plugin's user-context says CRM is "none"): note "Growth not installed; pipeline analysis skipped" and query the CRM directly for tasks owned by you (per `crm-owner-id` in user-context), status NOT_STARTED or IN_PROGRESS, due on/before the target day. Sort by priority then due date.
 
 ### 2C — Pull project context from working memory
 **If `cortex` is installed:** memory lives at `<config-root>/memory/` (resolve `<config-root>` per cortex's `references/core-contract.md` §1 — never hardcode a path). Read `DASHBOARD.md` for the master index, then read individual node files for active projects. Extract: P0/P1 actions, open threads, deadlines, blockers.

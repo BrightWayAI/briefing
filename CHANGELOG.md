@@ -4,6 +4,12 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.12.4] — Plain plugin names (2026-11-16)
+
+### Changed
+- Plugins are named for the work they cover: Ops, Clients, Comms, Growth, Briefing, Alignment (were Chief of Staff, Client Success, Comms Desk, Growth Engine, Today's Brief, Team Alignment). In ChatGPT the mention changes to match, for example `@Ops`. Plugin IDs, commands, and behavior are unchanged.
+- Description rewritten to say what the plugin covers. It had grown into a version-by-version history, which is in this changelog.
+
 ## [0.12.3] — Cloud config-root portability (2026-10-30)
 
 ### Fixed
