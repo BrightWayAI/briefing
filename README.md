@@ -106,9 +106,9 @@ See `docs/proposals/SECOND-BRAIN-V2-SPEC.md` in the marketplace repo for the ful
 <!-- OPENAI-SUPPORT:START -->
 ## ChatGPT and Codex
 
-Today's Brief ships as a native OpenAI plugin as well as a Claude plugin. In
-ChatGPT desktop Local Work, enable **Today's Brief** and ask naturally or mention
-`@Today's Brief`. In Codex, use natural language or the namespaced skills exposed
+Briefing ships as a native OpenAI plugin as well as a Claude plugin. In
+ChatGPT desktop Local Work, enable **Briefing** and ask naturally or mention
+`@Briefing`. In Codex, use natural language or the namespaced skills exposed
 by the plugin. Claude slash-command names in this README remain workflow aliases.
 
 All hosts resolve the same `<config-root>` used by Cortex, so Claude, ChatGPT desktop,
