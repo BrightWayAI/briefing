@@ -35,7 +35,7 @@ See `commands/dashboard.md` for the full workflow.
 - `<config-root>/plugins/*.user-context.md` (per-plugin setup state)
 - `<config-root>/relationships/pipeline.md` + `sent-log.md` (if growth is installed)
 - `<config-root>/time-log.csv` (if admin installed)
-- `~/.brightway-state/agent-log.jsonl` (this week's activity)
+- `<config-root>/plugins/ops/agent-runs/` (this week's agent activity)
 - Runtime MCP tool list (connector detection)
 - `references/nucleus-dashboard-template.html` (bundled with ops source)
 

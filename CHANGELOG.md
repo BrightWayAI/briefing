@@ -4,6 +4,11 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.12.5] — Dashboard reads the automatic agent log (2026-11-16)
+
+### Changed
+- `/dashboard` reads agent activity from the automatic agent run log at `<config-root>/plugins/ops/agent-runs/` (ops 0.21.0) instead of `~/.brightway-state/agent-log.jsonl`, and labels the figures as agent runs. The log records sub-agent runs, not every command.
+
 ## [0.12.4] — Plain plugin names (2026-11-16)
 
 ### Changed

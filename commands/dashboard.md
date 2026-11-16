@@ -33,16 +33,16 @@ Same data sources as `/status` Step 1:
 - Shared config files (identity, voice, DASHBOARD, decay-config, note-sources, scope-migration marker)
 - Per-plugin user-context state from `<config-root>/plugins/*.user-context.md`
 - Connector availability (MCP tool-name presence — no calls)
-- `~/.brightway-state/agent-log.jsonl` last-run timestamps
+- `<config-root>/plugins/ops/agent-runs/` last-run timestamps (the automatic agent run log; `stop` lines)
 
 ### Section 2: This week's activity
 
-Read `~/.brightway-state/agent-log.jsonl` filtered to last 7 days. Aggregate:
+Read this month's and last month's `<YYYY-MM>.jsonl` files in `<config-root>/plugins/ops/agent-runs/`, filtered to `stop` lines from the last 7 days. Aggregate:
 
-- **Total runs** across all skills
-- **Top 10 skills by run count**, sorted desc
+- **Total agent runs**
+- **Top 10 agents by run count**, sorted desc
 - **Daily runs histogram** — count per day for the last 7 days (for a small bar chart)
-- **Skills that haven't run in 14+ days** — surface as "rusty" (signal that plugin may be misconfigured or unused)
+- **Agents that haven't run in 14+ days** — surface as "quiet" (the workflow that uses them may be unused or misconfigured). The log records sub-agent runs, not every command, so a command that uses no sub-agent does not appear here.
 
 ### Section 3: Cortex memory health (v4.4+)
 
