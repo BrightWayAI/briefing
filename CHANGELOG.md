@@ -4,6 +4,16 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.12.8] — Remove real client and contact names (2026-11-17)
+
+Privacy fix. Examples, an eval prompt, a test fixture and older changelog
+entries still named real clients, prospects and contacts. All replaced with
+fictional names. No functional change.
+
+### Fixed
+- Real client, prospect and contact names removed from command examples,
+  reference templates, evals, tests and earlier changelog entries.
+
 ## [0.12.7] — Eval fixture sync (2026-11-16)
 
 ### Changed

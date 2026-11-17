@@ -149,7 +149,7 @@ Batch all CRM intents and present one confirmation table before writing:
 From today's brief task actions:
   · "Deliver B&S plan" (task-123) → mark COMPLETED
   · "CBM admin" (task-456) → delegate to Erica (create her task)
-  · "Globant reply" (task-789) → skip 3d (push due date)
+  · "Northwind reply" (task-789) → skip 3d (push due date)
 
 [Y]es to all · [N]o to all · [E]dit (toggle per row)
 ```
