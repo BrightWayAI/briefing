@@ -4,6 +4,11 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.12.7] — Eval fixture sync (2026-11-16)
+
+### Changed
+- Eval fixture synced with cortex 4.40.0: the fictional transcript sits under `archive/<date>/transcripts/`. Tests only.
+
 ## [0.12.6] — Eval fixture and a quality test (2026-11-16)
 
 ### Added
