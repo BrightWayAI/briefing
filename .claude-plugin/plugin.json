@@ -1,6 +1,6 @@
 {
   "name": "briefing",
-  "version": "0.12.6",
+  "version": "0.12.7",
   "description": "Briefing. The daily and periodic views of your work. /brief builds today's working surface (calendar, priority tasks, outreach queue, yesterday's reflection) and /brief --tomorrow plans the next business day; /process-brief turns the marks and notes you make on it into drafts and proposed updates; /review is the weekly digest; /timeline is a chronological activity view; /dashboard is the visual overview of the whole setup. What you mark in a brief is picked up by cortex overnight and reviewed in /morning. Configure with /setup-brief and /setup-plan.",
   "author": {
     "name": "BrightWay AI"
