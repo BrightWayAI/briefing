@@ -4,6 +4,11 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.12.9] — README refresh (2026-11-17)
+
+### Changed
+- README brought up to date: `/review`, `/timeline` and `/dashboard` listed; the outdated roadmap replaced with how the brief fits the nightly and morning loop. Documentation only; no behavior change.
+
 ## [0.12.8] — Remove real client and contact names (2026-11-17)
 
 Privacy fix. Examples, an eval prompt, a test fixture and older changelog
