@@ -6,7 +6,7 @@
 
 Pulls today's calendar, inbox action items, CRM priority tasks, outreach queue, yesterday's reflection — into a single Cowork artifact titled "Today's Brief." You open it once a day, write short instructions into the textareas under each item ("draft reply: short ack + my view," "move to tomorrow," "ask about pricing"), and then run `/process-brief`. Claude reads your annotations and acts: drafts replies in Gmail, reschedules tasks in your CRM, appends talking points to meeting prep — all as drafts and reversible updates, never sends.
 
-This is Phase 1 of the second-brain v2 extension. The brief is the surface that turns memory into action.
+The brief is the surface that turns memory into action.
 
 ---
 
@@ -19,7 +19,7 @@ This plugin lives in the [BrightWay AI marketplace](https://github.com/BrightWay
 /plugin install briefing@nucleus
 ```
 
-Standalone install (less common): `gh repo clone BrightWayAI/daily-brief` into your plugin directory.
+Standalone install (less common): `gh repo clone BrightWayAI/briefing` into your plugin directory.
 
 ## Setup
 
@@ -36,6 +36,9 @@ Standalone install (less common): `gh repo clone BrightWayAI/daily-brief` into y
 | `/brief --tomorrow` (alias: `/plan-tomorrow`) | Calendar-first daily planning. Pulls CRM tasks, working memory, and inbox action items, then creates time blocks on your calendar with full context baked in. The calendar IS the plan. |
 | `/setup-brief` | Configure the daily brief sections, sort defaults, annotation placeholder hints. Re-run anytime. |
 | `/setup-plan` | Configure plan-tomorrow's CRM ownership, working hours, calendar conventions, and companion-plugin integrations. Re-run anytime. |
+| `/review` | Weekly review across all projects: what moved, what was learned, what's stuck, what's next. Cortex's `/end-week` runs it for you. |
+| `/timeline` | Chronological activity across all projects or one project. |
+| `/dashboard` | Visual dashboard of your Nucleus stack: plugins, recent activity, memory health, outreach pipeline, time and billing. For a terse text version use ops's `/status`. |
 
 ## How it works
 
@@ -46,7 +49,7 @@ Standalone install (less common): `gh repo clone BrightWayAI/daily-brief` into y
                            │ pulls
    ┌──────────────┬────────┼────────┬─────────────┬──────────────┐
    ▼              ▼        ▼        ▼             ▼              ▼
-calendar     inbox-triage  CRM   weekly-outreach  cortex      yesterday's
+calendar     inbox-triage  CRM   growth outreach  cortex      yesterday's
             (or Gmail fallback)                  memory       briefs/<yest>.md
                            │
                            ▼
@@ -57,7 +60,7 @@ calendar     inbox-triage  CRM   weekly-outreach  cortex      yesterday's
                          ▼
               ┌──────────────────────────┐
               │  Cowork artifact:        │
-              │  "Today's Brief"         │  ← live working surface (7 sections,
+              │  "Today's Brief"         │  ← live working surface (6 sections,
               │                          │     textarea per item)
               └──────────┬───────────────┘
                          │ user writes annotations,
@@ -93,15 +96,9 @@ All per-user config lives at `<config-root>/plugins/briefing.user-context.md`. T
 
 `<config-root>` is the user-chosen folder for marketplace plugin config, resolved via the shared precedence chain (explicit override → `CORTEX_CONFIG_ROOT` → `~/.cortex/config-root` primary pointer → `~/Documents/.claude-plugin-config-root` legacy fallback → default). See the marketplace README for the convention.
 
-## Roadmap
+## Where it fits in the day
 
-This is Phase 1 of a larger second-brain extension. Coming next:
-
-- **Phase 2** (`inbox-triage`) — cheap Haiku classifier for inbox section content. Replaces the simple "unread last 24h" fallback with quality-filtered triage.
-- **Phase 3** (cortex `person/` pages) — canonical per-person pages so brief section 1 (meetings) can surface 5-second context for any attendee.
-- **Phase 5** (`/end-day`) — orchestration chain that ties yesterday's reflection, today's brief, and cortex commit triage into one end-of-day flow.
-
-See `docs/proposals/SECOND-BRAIN-V2-SPEC.md` in the marketplace repo for the full plan.
+Cortex's `/morning` reviews what was learned overnight and can open `/brief` as its last step. What you mark on the brief (done, snoozed, dismissed, your reflection) is read back by cortex's nightly `/listen`, so tomorrow's brief starts from what you did today. Cortex's optional `/end-day` reads the same marks for a deeper same-day pass. Growth's `/nudges` items appear in `/morning` under "Needs a nudge".
 
 <!-- OPENAI-SUPPORT:START -->
 ## ChatGPT and Codex
