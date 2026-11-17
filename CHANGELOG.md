@@ -4,6 +4,12 @@ All notable changes to daily-brief are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions match `plugin.json`.
 
+## [0.12.6] — Eval fixture and a quality test (2026-11-16)
+
+### Added
+- `evals/_fixtures/seed-config-root.sh` (a copy of cortex's fictional config folder) and `evals/README.md`. `brief-natural-language` now runs against it.
+- Output-quality eval `brief-quality`: the real top priority first, the other open items, and no invented meetings.
+
 ## [0.12.5] — Dashboard reads the automatic agent log (2026-11-16)
 
 ### Changed
